@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: hojeafestaenossa
+
+  datasource:
+    # Ajustado para o nome definido no POSTGRES_DB do compose
+    url: jdbc:postgresql://localhost:5432/hojeafestaenossa
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: true # Adicionado para facilitar o debug no console
+    properties:
+      hibernate:
+        format_sql: true # Sintaxe simplificada
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
