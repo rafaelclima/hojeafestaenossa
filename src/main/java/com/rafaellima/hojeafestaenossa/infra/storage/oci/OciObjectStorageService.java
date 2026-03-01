@@ -1,8 +1,6 @@
 package com.rafaellima.hojeafestaenossa.infra.storage.oci;
 
 import java.io.InputStream;
-import java.lang.classfile.constantpool.PoolEntry;
-
 import org.springframework.stereotype.Service;
 
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
