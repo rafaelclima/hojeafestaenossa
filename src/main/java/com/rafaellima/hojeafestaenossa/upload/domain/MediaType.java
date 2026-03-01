@@ -1,5 +1,8 @@
 package com.rafaellima.hojeafestaenossa.upload.domain;
 
-public class MediaType {
+public enum MediaType {
+
+    PHOTO,
+    VIDEO
 
 }
