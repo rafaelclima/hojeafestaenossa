@@ -3,7 +3,7 @@ spring:
     name: hojeafestaenossa
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/hojeafestaenossa
+    url: jdbc:postgresql://localhost:5432/hojeafestaenossa?stringtype=unspecified
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -12,12 +12,12 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-    show-sql: true # Adicionado para facilitar o debug no console
+    show-sql: true
     properties:
       hibernate:
-        "[format_sql]": true
+        format_sql: true
         jdbc:
-          "[time_zone]": UTC
+          time_zone: UTC
 
   flyway:
     enabled: true
@@ -25,3 +25,16 @@ spring:
 
 server:
   port: 8080
+
+oci:
+  region: sa-saopaulo-1
+  tenancy-id: ${OCI_TENANCY_ID}
+  user-id: ${OCI_USER_ID}
+  fingerprint: ${OCI_FINGERPRINT}
+  private-key-path: ${OCI_PRIVATE_KEY_PATH}
+  namespace: ${OCI_NAMESPACE}
+  bucket-name: hojeafestaenossa
+
+logging:
+  level:
+    com.oracle.bmc: INFO
