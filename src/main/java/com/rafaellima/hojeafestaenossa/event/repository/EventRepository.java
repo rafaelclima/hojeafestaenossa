@@ -11,4 +11,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     Optional<Event> findByAccessToken(String accessToken);
 
+    Optional<Event> findBySlug(String slug);
+
 }
