@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
+import com.rafaellima.hojeafestaenossa.shared.exception.BusinessException;
+import com.rafaellima.hojeafestaenossa.shared.exception.MaxUploadSizeExceededException;
 import com.rafaellima.hojeafestaenossa.upload.domain.MediaType;
 import com.rafaellima.hojeafestaenossa.upload.domain.Upload;
 import com.rafaellima.hojeafestaenossa.upload.repository.UploadRepository;
@@ -55,20 +57,28 @@ public class UploadMediaService {
 
     private void validateFile(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Arquivo vazio");
+            throw new BusinessException("400", "Arquivo vazio");
         }
 
         String contentType = file.getContentType();
         if (contentType == null) {
-            throw new IllegalArgumentException("Tipo de arquivo inválido");
+            throw new BusinessException("400", "Tipo de arquivo inválido");
         }
 
         boolean isImage = contentType.startsWith("image/");
         boolean isVideo = contentType.startsWith("video/");
 
         if (!isImage && !isVideo) {
-            throw new IllegalArgumentException("Tipo de arquivo não suportado. Envie apenas fotos ou vídeos.");
+            throw new BusinessException("400", "Tipo de arquivo não suportado. Envie apenas fotos ou vídeos.");
         }
+
+        long mediaSize = file.getSize();
+        if (contentType.startsWith("image/") && mediaSize > 8388608) {
+            throw new MaxUploadSizeExceededException();
+        } else if (mediaSize > 52428800) {
+            throw new MaxUploadSizeExceededException();
+        }
+
     }
 
     private MediaType resolveMediaType(String contentType) {
