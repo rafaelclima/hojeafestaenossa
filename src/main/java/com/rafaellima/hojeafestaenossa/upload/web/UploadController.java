@@ -1,6 +1,7 @@
 package com.rafaellima.hojeafestaenossa.upload.web;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService;
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.upload.application.ListSlideshowUploadsService;
+import com.rafaellima.hojeafestaenossa.upload.application.ModerationService;
 import com.rafaellima.hojeafestaenossa.upload.application.UploadMediaService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/uploads")
@@ -30,6 +34,7 @@ public class UploadController {
     private final UploadMediaService uploadMediaService;
     private final FindEventByTokenService findEventByTokenService;
     private final ListSlideshowUploadsService listSlideshowUploadsService;
+    private final ModerationService moderationService;
 
     @PostMapping(value = "/events/{eventToken}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> upload(
@@ -59,4 +64,13 @@ public class UploadController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(uploadedMedia);
     }
+
+    @PutMapping("/{uploadId}/visibility")
+    public ResponseEntity<Void> setVisbility(
+            @PathVariable UUID uploadId,
+            @RequestBody VisibilityRequest request) {
+        moderationService.setVisibility(uploadId, request.visible());
+        return ResponseEntity.ok().build();
+    }
+
 }

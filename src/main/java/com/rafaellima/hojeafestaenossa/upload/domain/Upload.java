@@ -97,6 +97,10 @@ public class Upload {
         return visible;
     }
 
+    public void setVisibility(boolean visible) {
+        this.visible = visible;
+    }
+
     public String getUrl() {
         return url;
     }
