@@ -43,6 +43,9 @@ public class Upload {
     @Column(name = "is_visible", nullable = false)
     private Boolean visible = true;
 
+    @Column(name = "url", nullable = false)
+    private String url;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -55,13 +58,15 @@ public class Upload {
             String storageKey,
             String originalName,
             long fileSize,
-            String message) {
+            String message,
+            String url) {
         this.eventId = eventId;
         this.mediaType = mediaType;
         this.storageKey = storageKey;
         this.originalName = originalName;
         this.fileSize = fileSize;
         this.message = message;
+        this.url = url;
     }
 
     public UUID getId() {
@@ -90,6 +95,10 @@ public class Upload {
 
     public boolean isVisible() {
         return visible;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
 }
