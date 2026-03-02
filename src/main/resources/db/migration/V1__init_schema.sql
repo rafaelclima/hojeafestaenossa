@@ -64,6 +64,9 @@ CREATE TABLE uploads (
     -- usado pelo slideshow
     is_visible      BOOLEAN NOT NULL DEFAULT TRUE,
 
+    -- URL pública gerada pelo OCI (nunca expira)
+    url              TEXT NOT NULL,
+
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_upload_event
@@ -100,6 +103,9 @@ COMMENT ON TABLE uploads IS
 
 COMMENT ON COLUMN uploads.storage_key IS
 'Identificador do arquivo no Object Storage (não é URL pública).';
+
+COMMENT ON COLUMN uploads.url IS
+'URL pública para acesso ao arquivo no OCI (永久).';
 
 COMMENT ON COLUMN uploads.message IS
 'Mensagem opcional enviada junto com a mídia.';
