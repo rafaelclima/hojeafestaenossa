@@ -1,8 +1,10 @@
 package com.rafaellima.hojeafestaenossa.upload.application;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.rafaellima.hojeafestaenossa.upload.domain.Upload;
@@ -16,8 +18,9 @@ public class ListSlideshowUploadsService {
 
     private final UploadRepository uploadRepository;
 
-    public List<Upload> execute(UUID eventId) {
-        return uploadRepository.findTop50ByEventIdAndVisibleTrueOrderByCreatedAtDesc(eventId);
+    public Page<Upload> execute(UUID eventId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return uploadRepository.findByEventIdAndVisibleTrueOrderByCreatedAtDesc(eventId, pageable);
     }
 
 }

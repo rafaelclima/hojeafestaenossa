@@ -3,12 +3,15 @@ package com.rafaellima.hojeafestaenossa.upload.web;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,15 +46,18 @@ public class UploadController {
     }
 
     @GetMapping("/events/{eventToken}/slideshow")
-    public List<SlideshowItemResponse> getSlideshowItems(@PathVariable String eventToken) {
+    public ResponseEntity<Page<SlideshowItemResponse>> getSlideshowItems(@PathVariable String eventToken,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size) {
         var event = findEventByTokenService.execute(eventToken);
 
-        return listSlideshowUploadsService.execute(event.getId()).stream()
+        Page<SlideshowItemResponse> uploadedMedia = listSlideshowUploadsService.execute(event.getId(), page, size)
                 .map(u -> new SlideshowItemResponse(
                         u.getUrl(),
                         u.getMediaType(),
                         u.getMessage(),
-                        u.getCreatedAt()))
-                .toList();
+                        u.getCreatedAt()));
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(uploadedMedia);
     }
 }
