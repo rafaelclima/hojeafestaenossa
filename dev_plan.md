@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral do Projeto
 
-**Objetivo:**\
+**Objetivo:**
 Construir uma plataforma onde usuários possam enviar fotos e vídeos
 curtos (até 30 segundos) para um evento específico através de upload, e
 esse conteúdo seja exibido em tempo real em um telão.
