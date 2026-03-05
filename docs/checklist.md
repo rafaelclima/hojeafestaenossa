@@ -33,6 +33,13 @@
 ### Eventos
 - [x] Entidade Event com campos: name, accessToken, isPublicAlbum, startedAt, expiredAt
 - [x] Busca de evento por token
+- [x] Criação de eventos (POST /events)
+- [x] Validação de período do evento (startedAt/expiredAt)
+- [ ] Geração de URL completa do evento (para QR Code)
+- [ ] Geração de QR Code
+- [ ] Atualização de eventos (PUT /events/{token})
+- [ ] Exclusão de eventos (DELETE /events/{token})
+- [ ] Listagem de eventos (GET /events)
 
 ### Infraestrutura
 - [x] Configuração para PostgreSQL
@@ -46,20 +53,22 @@
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| POST | `/uploads/events/{eventToken}` | Enviar foto/vídeo para um evento |
+| POST | `/events` | Criar novo evento |
+| GET | `/events/{token}` | Buscar informações de um evento |
+| GET | `/uploads/events/{eventToken}` | Enviar foto/vídeo para um evento |
 | GET | `/uploads/events/{eventToken}/slideshow?page=0&size=50` | Listar mídias visíveis para o telão |
 | PUT | `/uploads/{uploadId}/visibility` | Alterar visibilidade de uma mídia |
-| GET | `/events/{token}` | Buscar informações de um evento |
 
 ---
 
 ## Funcionalidades Pendentes
 
 ### Eventos
-- [ ] CRUD completo de eventos (POST, GET, PUT, DELETE)
-- [ ] Geração automática de QR Code
-- [ ] Validação de período do evento (startedAt/expiredAt)
-- [ ] Listagem de eventos
+- [ ] Geração de QR Code
+- [ ] Geração de URL completa do evento (retornar no response)
+- [ ] Atualização de eventos (PUT /events/{token})
+- [ ] Exclusão de eventos (DELETE /events/{token})
+- [ ] Listagem de eventos (GET /events)
 
 ### Upload e Mídia
 - [ ] Delete de upload
@@ -84,9 +93,11 @@
 ## Próximos Passos Recomendados
 
 ### Fase 1 - Gestão de Eventos (Alta Prioridade)
-1. Implementar POST /events para criar eventos
-2. Implementar validação de período (verificar se evento está ativo)
-3. Adicionar seed de dados para testes
+1. ✅ Implementar POST /events para criar eventos (em andamento)
+2. ✅ Implementar validação de período (verificar se evento está ativo)
+3. [ ] Implementar endpoints de update, delete e listagem
+4. [ ] Adicionar geração de URL completa do evento
+5. [ ] Adicionar geração de QR Code
 
 ### Fase 2 - Segurança (Média Prioridade)
 1. Adicionar autenticação básica
@@ -105,11 +116,17 @@
 src/main/java/com/rafaellima/hojeafestaenossa/
 ├── event/
 │   ├── application/
+│   │   ├── CreateEventService.java
+│   │   ├── FindAllEventsService.java
 │   │   └── FindEventByTokenService.java
 │   ├── domain/
 │   │   └── Event.java
-│   └── repository/
-│       └── EventRepository.java
+│   ├── repository/
+│   │   └── EventRepository.java
+│   └── web/
+│       ├── CreateEventRequest.java
+│       ├── EventController.java
+│       └── EventResponse.java
 ├── upload/
 │   ├── application/
 │   │   ├── ListSlideshowUploadsService.java
@@ -136,6 +153,7 @@ src/main/java/com/rafaellima/hojeafestaenossa/
         ├── BusinessException.java
         ├── ErrorResponse.java
         ├── ExceptionCustomized.java
+        ├── FutureDateException.java
         ├── GlobalExceptionHandling.java
         ├── MaxUploadSizeExceededException.java
         ├── NotFoundException.java
@@ -173,4 +191,4 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 
 ---
 
-Última atualização: 2026-03-02
+Última atualização: 2026-03-05

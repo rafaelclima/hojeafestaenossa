@@ -51,6 +51,10 @@ public class Event {
         return id;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public String getAccessToken() {
         return accessToken;
     }
@@ -63,8 +67,32 @@ public class Event {
         return startedAt;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
     public Instant getExpiredAt() {
         return expiredAt;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setStartedAt(Instant startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public void setExpiredAt(Instant expiredAt) {
+        this.expiredAt = expiredAt;
+    }
+
+    public void setPublicAlbum(boolean publicAlbum) {
+        this.publicAlbum = publicAlbum;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
 }
