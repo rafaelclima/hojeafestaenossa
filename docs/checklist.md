@@ -34,12 +34,12 @@
 - [x] Entidade Event com campos: name, accessToken, isPublicAlbum, startedAt, expiredAt
 - [x] Busca de evento por token
 - [x] Criação de eventos (POST /events)
+- [x] Listagem de eventos (GET /events)
+- [x] Atualização de eventos (PUT /events/{token})
+- [x] Exclusão de eventos (DELETE /events/{token})
 - [x] Validação de período do evento (startedAt/expiredAt)
 - [ ] Geração de URL completa do evento (para QR Code)
 - [ ] Geração de QR Code
-- [ ] Atualização de eventos (PUT /events/{token})
-- [ ] Exclusão de eventos (DELETE /events/{token})
-- [ ] Listagem de eventos (GET /events)
 
 ### Infraestrutura
 - [x] Configuração para PostgreSQL
@@ -54,8 +54,11 @@
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | POST | `/events` | Criar novo evento |
+| GET | `/events` | Listar todos os eventos |
 | GET | `/events/{token}` | Buscar informações de um evento |
-| GET | `/uploads/events/{eventToken}` | Enviar foto/vídeo para um evento |
+| PUT | `/events/{token}` | Atualizar evento |
+| DELETE | `/events/{token}` | Excluir evento |
+| POST | `/uploads/events/{eventToken}` | Enviar foto/vídeo para um evento |
 | GET | `/uploads/events/{eventToken}/slideshow?page=0&size=50` | Listar mídias visíveis para o telão |
 | PUT | `/uploads/{uploadId}/visibility` | Alterar visibilidade de uma mídia |
 
@@ -117,8 +120,10 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 ├── event/
 │   ├── application/
 │   │   ├── CreateEventService.java
+│   │   ├── DeleteEventService.java
 │   │   ├── FindAllEventsService.java
-│   │   └── FindEventByTokenService.java
+│   │   ├── FindEventByTokenService.java
+│   │   └── UpdateEventService.java
 │   ├── domain/
 │   │   └── Event.java
 │   ├── repository/
@@ -126,7 +131,8 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 │   └── web/
 │       ├── CreateEventRequest.java
 │       ├── EventController.java
-│       └── EventResponse.java
+│       ├── EventResponse.java
+│       └── UpdateEventRequest.java
 ├── upload/
 │   ├── application/
 │   │   ├── ListSlideshowUploadsService.java
@@ -191,4 +197,4 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 
 ---
 
-Última atualização: 2026-03-05
+Última atualização: 2026-03-06
