@@ -1,8 +1,9 @@
 package com.rafaellima.hojeafestaenossa.event.application;
 
-import java.time.Instant;
+import java.security.SecureRandom;
 import java.util.UUID;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
@@ -26,8 +27,10 @@ public class CreateEventService {
         }
 
         String generateAccessToken = UUID.randomUUID().toString();
+        String generateAdminToken = RandomStringUtils.random(6, 0, 0, true, true, null, new SecureRandom());
 
-        Event event = new Event(request.name(), generateAccessToken, request.startedAt(), request.expiredAt());
+        Event event = new Event(request.name(), generateAccessToken, request.startedAt(), request.expiredAt(),
+                generateAdminToken);
 
         return eventRepository.save(event);
 

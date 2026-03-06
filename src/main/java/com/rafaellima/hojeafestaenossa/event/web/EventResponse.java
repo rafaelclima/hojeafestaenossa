@@ -20,6 +20,7 @@ public class EventResponse {
     private String accessToken;
     private boolean publicAlbum;
     private String eventUrl;
+    private String adminToken;
 
     public static EventResponse from(Event event, String baseUrl) {
         return EventResponse.builder()
@@ -32,6 +33,7 @@ public class EventResponse {
                 .accessToken(event.getAccessToken())
                 .publicAlbum(event.isPublicAlbum())
                 .eventUrl(baseUrl + "/events?eventId=" + event.getAccessToken())
+                .adminToken(event.getAdminToken())
                 .build();
 
     }

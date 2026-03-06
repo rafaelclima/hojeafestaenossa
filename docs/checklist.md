@@ -40,6 +40,7 @@
 - [x] Validação de período do evento (startedAt/expiredAt)
 - [x] Geração de URL completa do evento (para QR Code)
 - [x] Geração de QR Code (implementado no frontend via eventUrl)
+- [x] Sistema de autenticação admin por evento (adminToken)
 
 ### Infraestrutura
 - [x] Configuração para PostgreSQL
@@ -112,6 +113,7 @@
 src/main/java/com/rafaellima/hojeafestaenossa/
 ├── event/
 │   ├── application/
+│   │   ├── AdminAuthService.java
 │   │   ├── CreateEventService.java
 │   │   ├── DeleteEventService.java
 │   │   ├── FindAllEventsService.java
@@ -156,7 +158,8 @@ src/main/java/com/rafaellima/hojeafestaenossa/
         ├── GlobalExceptionHandling.java
         ├── MaxUploadSizeExceededException.java
         ├── NotFoundException.java
-        └── TechnicalException.java
+        ├── TechnicalException.java
+        └── UnauthorizedException.java
 ```
 
 ---
@@ -169,6 +172,7 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 | id | UUID | PK |
 | name | VARCHAR(150) | Nome do evento |
 | access_token | VARCHAR(120) | Token único para acesso |
+| admin_token | VARCHAR(120) | Token único para admin |
 | is_public | BOOLEAN | Visibilidade |
 | started_at | TIMESTAMPTZ | Data de início |
 | expired_at | TIMESTAMPTZ | Data de expiração |

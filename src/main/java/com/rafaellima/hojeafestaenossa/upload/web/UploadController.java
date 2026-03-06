@@ -18,13 +18,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService;
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
+import com.rafaellima.hojeafestaenossa.shared.exception.NotFoundException;
+import com.rafaellima.hojeafestaenossa.shared.exception.UnauthorizedException;
 import com.rafaellima.hojeafestaenossa.upload.application.ListSlideshowUploadsService;
 import com.rafaellima.hojeafestaenossa.upload.application.ModerationService;
 import com.rafaellima.hojeafestaenossa.upload.application.UploadMediaService;
+import com.rafaellima.hojeafestaenossa.upload.domain.Upload;
+import com.rafaellima.hojeafestaenossa.upload.repository.UploadRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @RestController
 @RequestMapping("/uploads")
@@ -32,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class UploadController {
 
     private final UploadMediaService uploadMediaService;
+    private final UploadRepository uploadRepository;
     private final FindEventByTokenService findEventByTokenService;
     private final ListSlideshowUploadsService listSlideshowUploadsService;
     private final ModerationService moderationService;
@@ -68,7 +74,18 @@ public class UploadController {
     @PutMapping("/{uploadId}/visibility")
     public ResponseEntity<Void> setVisbility(
             @PathVariable UUID uploadId,
+            @RequestHeader("X-Admin-Token") String adminToken,
             @RequestBody VisibilityRequest request) {
+
+        Upload upload = uploadRepository.findById(uploadId)
+                .orElseThrow(() -> new NotFoundException("404", "Upload não encontrado"));
+
+        Event event = findEventByTokenService.execute(upload.getEventId().toString());
+
+        if (!event.getAdminToken().equals(adminToken)) {
+            throw new UnauthorizedException("401", "Invalid admin token");
+        }
+
         moderationService.setVisibility(uploadId, request.visible());
         return ResponseEntity.ok().build();
     }

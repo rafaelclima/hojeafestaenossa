@@ -37,14 +37,18 @@ public class Event {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "admin_token", nullable = false, length = 120, unique = true)
+    private String adminToken;
+
     protected Event() {
     }
 
-    public Event(String name, String accessToken, Instant startedAt, Instant expiredAt) {
+    public Event(String name, String accessToken, Instant startedAt, Instant expiredAt, String adminToken) {
         this.name = name;
         this.accessToken = accessToken;
         this.startedAt = startedAt;
         this.expiredAt = expiredAt;
+        this.adminToken = adminToken;
     }
 
     public UUID getId() {
@@ -93,6 +97,14 @@ public class Event {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public String getAdminToken() {
+        return adminToken;
+    }
+
+    public void setAdminToken(String adminToken) {
+        this.adminToken = adminToken;
     }
 
 }

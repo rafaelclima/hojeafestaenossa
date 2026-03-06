@@ -102,4 +102,5 @@ public class UploadMediaService {
         }
         return filename.substring(filename.lastIndexOf('.') + 1);
     }
+
 }

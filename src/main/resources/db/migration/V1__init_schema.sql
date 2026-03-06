@@ -29,12 +29,18 @@ CREATE TABLE events (
     started_at      TIMESTAMPTZ NOT NULL,
     expired_at      TIMESTAMPTZ NOT NULL,
 
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    admin_token     VARCHAR(32) NOT NULL UNIQUE
+
 );
 
 -- Índice para busca rápida por token (entrada do sistema)
 CREATE INDEX idx_events_access_token
     ON events(access_token);
+
+CREATE INDEX idx_events_admin_token
+    ON events(admin_token);
 
 
 -- ------------------------------------------------------------
