@@ -38,7 +38,7 @@
 - [x] Atualização de eventos (PUT /events/{token})
 - [x] Exclusão de eventos (DELETE /events/{token})
 - [x] Validação de período do evento (startedAt/expiredAt)
-- [ ] Geração de URL completa do evento (para QR Code)
+- [x] Geração de URL completa do evento (para QR Code)
 - [ ] Geração de QR Code
 
 ### Infraestrutura
@@ -68,10 +68,6 @@
 
 ### Eventos
 - [ ] Geração de QR Code
-- [ ] Geração de URL completa do evento (retornar no response)
-- [ ] Atualização de eventos (PUT /events/{token})
-- [ ] Exclusão de eventos (DELETE /events/{token})
-- [ ] Listagem de eventos (GET /events)
 
 ### Upload e Mídia
 - [ ] Delete de upload
