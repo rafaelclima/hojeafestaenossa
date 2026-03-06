@@ -44,3 +44,6 @@ oci:
 logging:
   level:
     com.oracle.bmc: INFO
+
+app:
+  base-url: https://hojeafestaenossa.site

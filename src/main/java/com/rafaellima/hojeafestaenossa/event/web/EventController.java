@@ -10,10 +10,9 @@ import com.rafaellima.hojeafestaenossa.event.application.FindAllEventsService;
 import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService;
 import com.rafaellima.hojeafestaenossa.event.application.UpdateEventService;
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
+import com.rafaellima.hojeafestaenossa.shared.config.AppProperties;
 
 import lombok.RequiredArgsConstructor;
-
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,27 +34,46 @@ public class EventController {
     private final CreateEventService createEventService;
     private final UpdateEventService updateEventService;
     private final DeleteEventService deleteEventService;
+    private final AppProperties appProperties;
 
     @GetMapping("/{token}")
-    public EventResponse getEvent(@PathVariable String token) {
+    public ResponseEntity<EventResponse> getEvent(@PathVariable String token) {
 
         Event event = findEventByTokenService.execute(token);
-        return new EventResponse(event.getId(), event.getName(), event.getStartedAt(), event.getExpiredAt(),
-                event.getCreatedAt(), event.getAccessToken(), event.isPublicAlbum());
+        String baseUrl = appProperties.getBaseUrl();
+        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
+
+        EventResponse response = EventResponse.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .startedAt(event.getStartedAt())
+                .expiredAt(event.getExpiredAt())
+                .createdAt(event.getCreatedAt())
+                .accessToken(event.getAccessToken())
+                .publicAlbum(event.isPublicAlbum())
+                .eventUrl(eventUrl)
+                .build();
+
+        return ResponseEntity.ok(response);
+
     }
 
     @PostMapping
     public ResponseEntity<EventResponse> createEvent(@RequestBody CreateEventRequest request) {
         Event event = createEventService.execute(request);
+        String baseUrl = appProperties.getBaseUrl();
+        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
 
-        EventResponse response = new EventResponse(
-                event.getId(),
-                event.getName(),
-                event.getStartedAt(),
-                event.getExpiredAt(),
-                event.getCreatedAt(),
-                event.getAccessToken(),
-                event.isPublicAlbum());
+        EventResponse response = EventResponse.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .startedAt(event.getStartedAt())
+                .expiredAt(event.getExpiredAt())
+                .createdAt(event.getCreatedAt())
+                .accessToken(event.getAccessToken())
+                .publicAlbum(event.isPublicAlbum())
+                .eventUrl(eventUrl)
+                .build();
 
         return ResponseEntity.status(201).body(response);
     }
@@ -66,32 +84,42 @@ public class EventController {
             @RequestParam(value = "size", defaultValue = "20") int size) {
 
         Page<Event> events = findAllEventsService.execute(PageRequest.of(page, size));
-        Page<EventResponse> response = events.map(event -> new EventResponse(
-                event.getId(),
-                event.getName(),
-                event.getStartedAt(),
-                event.getExpiredAt(),
-                event.getCreatedAt(),
-                event.getAccessToken(),
-                event.isPublicAlbum()));
+        String baseUrl = appProperties.getBaseUrl();
+        String eventUrl = baseUrl + "/events?eventId=";
+
+        Page<EventResponse> response = events.map(event -> EventResponse.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .startedAt(event.getStartedAt())
+                .expiredAt(event.getExpiredAt())
+                .createdAt(event.getCreatedAt())
+                .accessToken(event.getAccessToken())
+                .publicAlbum(event.isPublicAlbum())
+                .eventUrl(eventUrl + event.getAccessToken())
+                .build());
 
         return ResponseEntity.ok(response);
 
     }
 
     @PutMapping("/{token}")
-    public ResponseEntity<EventResponse> updateEvent(@PathVariable String token, @RequestBody UpdateEventRequest request) {
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable String token,
+            @RequestBody UpdateEventRequest request) {
 
         Event event = updateEventService.execute(token, request);
+        String baseUrl = appProperties.getBaseUrl();
+        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
 
-        EventResponse response = new EventResponse(
-                event.getId(),
-                event.getName(),
-                event.getStartedAt(),
-                event.getExpiredAt(),
-                event.getCreatedAt(),
-                event.getAccessToken(),
-                event.isPublicAlbum());
+        EventResponse response = EventResponse.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .startedAt(event.getStartedAt())
+                .expiredAt(event.getExpiredAt())
+                .createdAt(event.getCreatedAt())
+                .accessToken(event.getAccessToken())
+                .publicAlbum(event.isPublicAlbum())
+                .eventUrl(eventUrl)
+                .build();
 
         return ResponseEntity.ok(response);
     }
