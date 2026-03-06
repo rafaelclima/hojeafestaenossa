@@ -39,7 +39,7 @@
 - [x] Exclusão de eventos (DELETE /events/{token})
 - [x] Validação de período do evento (startedAt/expiredAt)
 - [x] Geração de URL completa do evento (para QR Code)
-- [ ] Geração de QR Code
+- [x] Geração de QR Code (implementado no frontend via eventUrl)
 
 ### Infraestrutura
 - [x] Configuração para PostgreSQL
@@ -65,9 +65,6 @@
 ---
 
 ## Funcionalidades Pendentes
-
-### Eventos
-- [ ] Geração de QR Code
 
 ### Upload e Mídia
 - [ ] Delete de upload
