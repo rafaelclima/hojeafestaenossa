@@ -61,6 +61,7 @@
 | DELETE | `/events/{token}` | Excluir evento |
 | POST | `/uploads/events/{eventToken}` | Enviar foto/vídeo para um evento |
 | GET | `/uploads/events/{eventToken}/slideshow?page=0&size=50` | Listar mídias visíveis para o telão |
+| GET | `/uploads/events/{eventToken}/moderation?page=0&size=50` | Listar todas as mídias para moderação (admin) |
 | PUT | `/uploads/{uploadId}/visibility` | Alterar visibilidade de uma mídia |
 
 ---
@@ -69,7 +70,7 @@
 
 ### Upload e Mídia
 - [ ] Delete de upload
-- [ ] Lista completa de uploads (para moderação)
+- [x] Lista completa de uploads (para moderação)
 - [ ] Compressão de imagens
 - [ ] Thumbnails
 
@@ -130,6 +131,7 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 │       └── UpdateEventRequest.java
 ├── upload/
 │   ├── application/
+│   │   ├── ListModerationAdminService.java
 │   │   ├── ListSlideshowUploadsService.java
 │   │   ├── ModerationService.java
 │   │   └── UploadMediaService.java
@@ -140,6 +142,7 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 │   │   └── UploadRepository.java
 │   └── web/
 │       ├── ModerationController.java
+│       ├── ModerationItemResponse.java
 │       ├── SlideshowItemResponse.java
 │       ├── UploadController.java
 │       └── VisibilityRequest.java

@@ -12,6 +12,8 @@ public interface UploadRepository extends JpaRepository<Upload, UUID> {
 
     Page<Upload> findByEventIdAndVisibleTrueOrderByCreatedAtDesc(UUID eventId, Pageable pageable);
 
+    Page<Upload> findAllByEventIdOrderByCreatedAtDesc(UUID eventId, Pageable pageable);
+
     long countbyEventId(UUID eventId);
 
 }

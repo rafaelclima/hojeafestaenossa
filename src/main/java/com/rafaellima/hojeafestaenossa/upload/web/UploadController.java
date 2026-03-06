@@ -20,6 +20,7 @@ import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.shared.exception.NotFoundException;
 import com.rafaellima.hojeafestaenossa.shared.exception.UnauthorizedException;
+import com.rafaellima.hojeafestaenossa.upload.application.ListModerationAdminService;
 import com.rafaellima.hojeafestaenossa.upload.application.ListSlideshowUploadsService;
 import com.rafaellima.hojeafestaenossa.upload.application.ModerationService;
 import com.rafaellima.hojeafestaenossa.upload.application.UploadMediaService;
@@ -41,6 +42,7 @@ public class UploadController {
     private final FindEventByTokenService findEventByTokenService;
     private final ListSlideshowUploadsService listSlideshowUploadsService;
     private final ModerationService moderationService;
+    private final ListModerationAdminService listModerationAdminService;
 
     @PostMapping(value = "/events/{eventToken}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> upload(
@@ -89,5 +91,30 @@ public class UploadController {
         moderationService.setVisibility(uploadId, request.visible());
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/uploads/events/{eventToken}/moderation")
+    public ResponseEntity<Page<ModerationItemResponse>> getModerationItems(
+            @PathVariable String eventToken,
+            @RequestHeader("X-Admin-Token") String adminToken,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size
+
+    ) {
+        Event event = findEventByTokenService.execute(eventToken);
+        if (!event.getAdminToken().equals(adminToken)) {
+            throw new UnauthorizedException("401", "Invalid admin token");
+        }
+        Page<ModerationItemResponse> uploads = listModerationAdminService.execute(event.getId(), page, size)
+                .map(u -> new ModerationItemResponse(
+                        u.getId(),
+                        u.getUrl(),
+                        u.getMediaType(),
+                        u.getMessage(),
+                        u.getCreatedAt(),
+                        u.isVisible()));
+
+        return ResponseEntity.status(HttpStatus.OK).body(uploads);
+
+    };
 
 }
