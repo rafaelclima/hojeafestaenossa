@@ -73,6 +73,9 @@ CREATE TABLE uploads (
     -- URL pública gerada pelo OCI (nunca expira)
     url              TEXT NOT NULL,
 
+    -- URL do thumbnail (para moderação rápida)
+    thumbnail_url    TEXT,
+
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_upload_event

@@ -46,6 +46,9 @@ public class Upload {
     @Column(name = "url", nullable = false)
     private String url;
 
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -59,7 +62,8 @@ public class Upload {
             String originalName,
             long fileSize,
             String message,
-            String url) {
+            String url,
+            String thumbnailUrl) {
         this.eventId = eventId;
         this.mediaType = mediaType;
         this.storageKey = storageKey;
@@ -67,6 +71,7 @@ public class Upload {
         this.fileSize = fileSize;
         this.message = message;
         this.url = url;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public UUID getId() {
@@ -103,6 +108,10 @@ public class Upload {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
     }
 
 }
