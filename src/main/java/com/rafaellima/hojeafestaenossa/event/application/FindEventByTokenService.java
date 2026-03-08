@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.event.repository.EventRepository;
+import com.rafaellima.hojeafestaenossa.shared.exception.NotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +16,7 @@ public class FindEventByTokenService {
 
     public Event execute(String accessToken) {
         return eventRepository.findByAccessToken(accessToken)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new NotFoundException("404", "Evento não encontrado"));
     }
 
 }
