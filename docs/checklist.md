@@ -18,6 +18,8 @@
 - [x] Resolução automática do tipo de mídia (PHOTO/VIDEO)
 - [x] Geração de chave de storage única
 - [x] Upload para OCI Object Storage
+- [x] Compressão de imagens no upload
+- [x] Geração de thumbnails para moderação
 - [x] Mensagem opcional do convidado
 
 ### Telão / Slideshow
@@ -25,6 +27,7 @@
 - [x] Ordenação por data (mais recentes primeiro)
 - [x] Paginação configurável (page, size)
 - [x] Retorno de URL pública para mídia
+- [x] WebSocket para atualização em tempo real
 
 ### Moderação
 - [x] Endpoint para alterar visibilidade (aprovar/rejeitar)
@@ -47,6 +50,8 @@
 - [x] Configuração para OCI Object Storage
 - [x] Flyway migrations
 - [x] Tratamento de exceções global padronizado
+- [x] Configuração CORS global
+- [x] Processamento assíncrono para uploads
 
 ---
 
@@ -63,6 +68,8 @@
 | GET | `/uploads/events/{eventToken}/slideshow?page=0&size=50` | Listar mídias visíveis para o telão |
 | GET | `/uploads/events/{eventToken}/moderation?page=0&size=50` | Listar todas as mídias para moderação (admin) |
 | PUT | `/uploads/{uploadId}/visibility` | Alterar visibilidade de uma mídia |
+| DELETE | `/uploads/{eventToken}/{uploadId}` | Excluir uma mídia (admin) |
+| GET | `/events/{token}/stats` | Obter estatísticas de um evento (admin) |
 
 ---
 
@@ -72,10 +79,7 @@
 - [x] Delete de upload
 - [x] Lista completa de uploads (para moderação)
 - [x] Compressão de imagens
-- [ ] Thumbnails
-
-### Telão / Slideshow
-- [x] WebSocket para atualização em tempo real
+- [x] Thumbnails
 
 ### Segurança
 - [ ] Autenticação
@@ -84,7 +88,7 @@
 
 ### Outros
 - [ ] Testes unitários
-- [ ] Estatísticas de uso
+- [x] Estatísticas de uso
 
 ---
 
@@ -92,19 +96,20 @@
 
 ### Fase 1 - Gestão de Eventos (Alta Prioridade)
 1. ✅ Implementar POST /events para criar eventos (em andamento)
-2. ✅ Implementar validação de período (verificar se evento está ativo)
-3. [ ] Implementar endpoints de update, delete e listagem
+2. ✅ Implementar validação de período do evento (startedAt/expiredAt)
+3. ✅ Implementar endpoints de update, delete e listagem
 4. [x] Adicionar geração de URL completa do evento
 5. [x] Adicionar geração de QR Code (Será feita pelo front-end)
 
 ### Fase 2 - Segurança (Média Prioridade)
-1. Adicionar autenticação básica
+1. Implementar autenticação básica (ex: JWT)
 2. ✅ Proteger endpoints de moderação
+3. Implementar Rate Limiting para proteger contra abuso
 
 ### Fase 3 - Melhorias (Baixa Prioridade)
 1. ✅ Adicionar WebSocket para telão em tempo real
-2. Implementar testes unitários
 3. ✅ Adicionar compressão de imagens
+4. Implementar testes unitários e de integração
 
 ---
 
@@ -131,9 +136,11 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 │       └── UpdateEventRequest.java
 ├── upload/
 │   ├── application/
+│   │   ├── ImageCompressionService.java
 │   │   ├── ListModerationAdminService.java
 │   │   ├── ListSlideshowUploadsService.java
 │   │   ├── ModerationService.java
+│   │   ├── ThumbnailGenerationService.java
 │   │   └── UploadMediaService.java
 │   ├── domain/
 │   │   ├── MediaType.java
@@ -153,6 +160,9 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 │           └── OciObjectStorageService.java
 └── shared/
     ├── config/
+    │   ├── AsyncConfig.java
+    │   ├── WebConfig.java
+    │   └── WebSocketConfig.java
     └── exception/
         ├── BusinessException.java
         ├── ErrorResponse.java
@@ -193,8 +203,9 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 | message | TEXT | Mensagem opcional |
 | is_visible | BOOLEAN | Visibilidade no telão |
 | url | TEXT | URL pública |
+| thumbnail_url | TEXT | URL do thumbnail para moderação |
 | created_at | TIMESTAMPTZ | Data de upload |
 
 ---
 
-Última atualização: 2026-03-06
+Última atualização: 2026-03-08
