@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.rafaellima.hojeafestaenossa.upload.domain.MediaType;
 import com.rafaellima.hojeafestaenossa.upload.domain.Upload;
 
 public interface UploadRepository extends JpaRepository<Upload, UUID> {
@@ -17,5 +18,7 @@ public interface UploadRepository extends JpaRepository<Upload, UUID> {
     void deleteById(UUID uploadId);
 
     long countByEventId(UUID eventId);
+
+    long countByEventIdAndMediaType(UUID eventId, MediaType mediaType);
 
 }
