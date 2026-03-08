@@ -17,10 +17,11 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.rafaellima.hojeafestaenossa.event.application.AdminAuthService;
+import com.rafaellima.hojeafestaenossa.event.application.FindEventByIdService;
 import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService;
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.shared.exception.NotFoundException;
-import com.rafaellima.hojeafestaenossa.shared.exception.UnauthorizedException;
 import com.rafaellima.hojeafestaenossa.upload.application.DeleteUploadService;
 import com.rafaellima.hojeafestaenossa.upload.application.ListModerationAdminService;
 import com.rafaellima.hojeafestaenossa.upload.application.ListSlideshowUploadsService;
@@ -42,6 +43,8 @@ public class UploadController {
     private final UploadMediaService uploadMediaService;
     private final UploadRepository uploadRepository;
     private final FindEventByTokenService findEventByTokenService;
+    private final FindEventByIdService findEventByIdService;
+    private final AdminAuthService adminAuthService;
     private final ListSlideshowUploadsService listSlideshowUploadsService;
     private final ModerationService moderationService;
     private final ListModerationAdminService listModerationAdminService;
@@ -85,17 +88,15 @@ public class UploadController {
         Upload upload = uploadRepository.findById(uploadId)
                 .orElseThrow(() -> new NotFoundException("404", "Upload não encontrado"));
 
-        Event event = findEventByTokenService.execute(upload.getEventId().toString());
+        Event event = findEventByIdService.execute(upload.getEventId());
 
-        if (!event.getAdminToken().equals(adminToken)) {
-            throw new UnauthorizedException("401", "Invalid admin token");
-        }
+        adminAuthService.validateAdminToken(event.getAccessToken(), adminToken);
 
         moderationService.setVisibility(uploadId, request.visible());
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/uploads/events/{eventToken}/moderation")
+    @GetMapping("/events/{eventToken}/moderation")
     public ResponseEntity<Page<ModerationItemResponse>> getModerationItems(
             @PathVariable String eventToken,
             @RequestHeader("X-Admin-Token") String adminToken,
@@ -103,10 +104,8 @@ public class UploadController {
             @RequestParam(defaultValue = "50") int size
 
     ) {
+        adminAuthService.validateAdminToken(eventToken, adminToken);
         Event event = findEventByTokenService.execute(eventToken);
-        if (!event.getAdminToken().equals(adminToken)) {
-            throw new UnauthorizedException("401", "Invalid admin token");
-        }
         Page<ModerationItemResponse> uploads = listModerationAdminService.execute(event.getId(), page, size)
                 .map(u -> new ModerationItemResponse(
                         u.getId(),
@@ -126,10 +125,8 @@ public class UploadController {
             @PathVariable UUID uploadId,
             @RequestHeader("X-Admin-Token") String adminToken) {
 
+        adminAuthService.validateAdminToken(eventToken, adminToken);
         Event event = findEventByTokenService.execute(eventToken);
-        if (!event.getAdminToken().equals(adminToken)) {
-            throw new UnauthorizedException("401", "Token do administrador não é válido");
-        }
 
         deleteUploadService.execute(uploadId, event.getId());
         return ResponseEntity.noContent().build();
