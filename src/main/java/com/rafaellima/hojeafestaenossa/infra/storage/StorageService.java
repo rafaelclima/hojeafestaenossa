@@ -10,4 +10,6 @@ public interface StorageService {
             long contentLength,
             String contentType);
 
+    void delete(String objectName);
+
 }

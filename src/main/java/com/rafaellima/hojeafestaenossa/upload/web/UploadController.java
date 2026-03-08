@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.shared.exception.NotFoundException;
 import com.rafaellima.hojeafestaenossa.shared.exception.UnauthorizedException;
+import com.rafaellima.hojeafestaenossa.upload.application.DeleteUploadService;
 import com.rafaellima.hojeafestaenossa.upload.application.ListModerationAdminService;
 import com.rafaellima.hojeafestaenossa.upload.application.ListSlideshowUploadsService;
 import com.rafaellima.hojeafestaenossa.upload.application.ModerationService;
@@ -43,6 +45,7 @@ public class UploadController {
     private final ListSlideshowUploadsService listSlideshowUploadsService;
     private final ModerationService moderationService;
     private final ListModerationAdminService listModerationAdminService;
+    private final DeleteUploadService deleteUploadService;
 
     @PostMapping(value = "/events/{eventToken}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> upload(
@@ -116,5 +119,21 @@ public class UploadController {
         return ResponseEntity.status(HttpStatus.OK).body(uploads);
 
     };
+
+    @DeleteMapping("/{eventToken}/{uploadId}")
+    public ResponseEntity<Void> deleteUpload(
+            @PathVariable String eventToken,
+            @PathVariable UUID uploadId,
+            @RequestHeader("X-Admin-Token") String adminToken) {
+
+        Event event = findEventByTokenService.execute(eventToken);
+        if (!event.getAdminToken().equals(adminToken)) {
+            throw new UnauthorizedException("401", "Token do administrador não é válido");
+        }
+
+        deleteUploadService.execute(uploadId, event.getId());
+        return ResponseEntity.noContent().build();
+
+    }
 
 }

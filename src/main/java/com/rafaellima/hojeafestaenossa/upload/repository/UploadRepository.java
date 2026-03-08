@@ -14,6 +14,8 @@ public interface UploadRepository extends JpaRepository<Upload, UUID> {
 
     Page<Upload> findAllByEventIdOrderByCreatedAtDesc(UUID eventId, Pageable pageable);
 
-    long countbyEventId(UUID eventId);
+    void deleteById(UUID uploadId);
+
+    long countByEventId(UUID eventId);
 
 }
