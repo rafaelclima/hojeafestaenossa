@@ -75,7 +75,7 @@
 - [ ] Thumbnails
 
 ### Telão / Slideshow
-- [ ] WebSocket para atualização em tempo real
+- [x] WebSocket para atualização em tempo real
 
 ### Segurança
 - [ ] Autenticação
@@ -102,7 +102,7 @@
 2. ✅ Proteger endpoints de moderação
 
 ### Fase 3 - Melhorias (Baixa Prioridade)
-1. Adicionar WebSocket para telão em tempo real
+1. ✅ Adicionar WebSocket para telão em tempo real
 2. Implementar testes unitários
 3. Adicionar compressão de imagens
 
