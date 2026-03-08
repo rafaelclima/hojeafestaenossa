@@ -69,7 +69,7 @@
 ## Funcionalidades Pendentes
 
 ### Upload e Mídia
-- [ ] Delete de upload
+- [x] Delete de upload
 - [x] Lista completa de uploads (para moderação)
 - [ ] Compressão de imagens
 - [ ] Thumbnails
@@ -79,7 +79,7 @@
 
 ### Segurança
 - [ ] Autenticação
-- [ ] Autorização (proteger endpoints de moderação)
+- [x] Autorização (proteger endpoints de moderação)
 - [ ] Rate limiting
 
 ### Outros
@@ -94,12 +94,12 @@
 1. ✅ Implementar POST /events para criar eventos (em andamento)
 2. ✅ Implementar validação de período (verificar se evento está ativo)
 3. [ ] Implementar endpoints de update, delete e listagem
-4. [ ] Adicionar geração de URL completa do evento
-5. [ ] Adicionar geração de QR Code
+4. [x] Adicionar geração de URL completa do evento
+5. [x] Adicionar geração de QR Code (Será feita pelo front-end)
 
 ### Fase 2 - Segurança (Média Prioridade)
 1. Adicionar autenticação básica
-2. Proteger endpoints de moderação
+2. ✅ Proteger endpoints de moderação
 
 ### Fase 3 - Melhorias (Baixa Prioridade)
 1. Adicionar WebSocket para telão em tempo real
