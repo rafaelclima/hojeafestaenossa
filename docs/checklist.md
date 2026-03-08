@@ -2,7 +2,7 @@
 
 ## Visão Geral do Projeto
 
-**Objetivo:** Plataforma onde usuários enviam fotos/vídeos para eventos específicos que são exibidos em um telão em tempo real.
+**Objetivo:** Plataforma onde usuários enviam fotos/vídeos para eventos específicos que são exibidos em um telão em tempo real e com moderação por parte de um admin.
 
 **Stack:** Java 21 + Spring Boot 4.0.3 + PostgreSQL + Flyway + OCI Object Storage
 
@@ -175,7 +175,7 @@ src/main/java/com/rafaellima/hojeafestaenossa/
 | id | UUID | PK |
 | name | VARCHAR(150) | Nome do evento |
 | access_token | VARCHAR(120) | Token único para acesso |
-| admin_token | VARCHAR(120) | Token único para admin |
+| admin_token | VARCHAR(32) | Token único para admin |
 | is_public | BOOLEAN | Visibilidade |
 | started_at | TIMESTAMPTZ | Data de início |
 | expired_at | TIMESTAMPTZ | Data de expiração |
