@@ -1,5 +1,7 @@
 package com.rafaellima.hojeafestaenossa.upload.web;
 
-public record VisibilityRequest(boolean visible) {
+import jakarta.validation.constraints.NotNull;
 
+public record VisibilityRequest(
+        @NotNull Boolean visible) {
 }
