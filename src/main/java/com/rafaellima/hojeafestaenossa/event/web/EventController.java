@@ -9,6 +9,7 @@ import com.rafaellima.hojeafestaenossa.event.application.CreateEventService;
 import com.rafaellima.hojeafestaenossa.event.application.DeleteEventService;
 import com.rafaellima.hojeafestaenossa.event.application.FindAllEventsService;
 import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService;
+import com.rafaellima.hojeafestaenossa.event.application.GetEventStatsService;
 import com.rafaellima.hojeafestaenossa.event.application.UpdateEventService;
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.shared.config.AppProperties;
@@ -38,6 +39,7 @@ public class EventController {
     private final DeleteEventService deleteEventService;
     private final AppProperties appProperties;
     private final AdminAuthService adminAuthService;
+    private final GetEventStatsService getEventStatsService;
 
     @GetMapping("/{token}")
     public ResponseEntity<EventResponse> getEvent(@PathVariable String token) {
@@ -138,6 +140,16 @@ public class EventController {
         adminAuthService.validateAdminToken(token, adminToken);
         deleteEventService.execute(token);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{token}/stats")
+    public ResponseEntity<EventStatsResponse> getEventStats(
+            @PathVariable String token,
+            @RequestHeader("X-Admin-Token") String adminToken) {
+
+        adminAuthService.validateAdminToken(token, adminToken);
+        EventStatsResponse stats = getEventStatsService.execute(token);
+        return ResponseEntity.ok(stats);
     }
 
 }
