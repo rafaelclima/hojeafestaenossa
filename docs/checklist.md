@@ -71,7 +71,7 @@
 ### Upload e Mídia
 - [x] Delete de upload
 - [x] Lista completa de uploads (para moderação)
-- [ ] Compressão de imagens
+- [x] Compressão de imagens
 - [ ] Thumbnails
 
 ### Telão / Slideshow
@@ -104,7 +104,7 @@
 ### Fase 3 - Melhorias (Baixa Prioridade)
 1. ✅ Adicionar WebSocket para telão em tempo real
 2. Implementar testes unitários
-3. Adicionar compressão de imagens
+3. ✅ Adicionar compressão de imagens
 
 ---
 
