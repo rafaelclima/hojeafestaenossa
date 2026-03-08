@@ -1,84 +1,90 @@
 package com.rafaellima.hojeafestaenossa.upload.application;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
-import com.rafaellima.hojeafestaenossa.shared.exception.BusinessException;
-import com.rafaellima.hojeafestaenossa.shared.exception.MaxUploadSizeExceededException;
 import com.rafaellima.hojeafestaenossa.upload.domain.MediaType;
 import com.rafaellima.hojeafestaenossa.upload.domain.Upload;
 import com.rafaellima.hojeafestaenossa.upload.repository.UploadRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UploadMediaService {
 
     private final UploadRepository uploadRepository;
     private final StorageService storageService;
+    private final ImageCompressionService imageCompressionService;
 
-    @Transactional
-    public Upload execute(MultipartFile file, Event event, String message) throws IOException {
-        validateFile(file);
+    @Async("taskExecutor")
+    public void execute(File originalFile, String originalFileName, String contentType, long fileSize, Event event,
+            String message) {
+        File fileToUpload = null;
+        File compressedFile = null;
 
-        MediaType mediaType = resolveMediaType(file.getContentType());
-        String storageKey = generateStorageKey(event.getAccessToken(), file);
-        String originalName = file.getOriginalFilename();
-        long fileSize = file.getSize();
+        try {
+            MediaType mediaType = resolveMediaType(contentType);
 
-        String publicUrl;
-        try (InputStream inputStream = file.getInputStream()) {
-            publicUrl = storageService.upload(
+            if (mediaType == MediaType.PHOTO) {
+                log.info("Starting image compression for file: {}", originalFileName);
+                compressedFile = imageCompressionService.execute(originalFile);
+                fileToUpload = compressedFile;
+                log.info("Image compression finished. Original size: {}, Compressed size: {}", fileSize,
+                        fileToUpload.length());
+            } else {
+                fileToUpload = originalFile;
+            }
+
+            String storageKey = generateStorageKey(event.getAccessToken(), originalFileName, mediaType);
+            long finalFileSize = fileToUpload.length();
+            String finalContentType = (mediaType == MediaType.PHOTO) ? "image/jpeg" : contentType;
+
+            String publicUrl;
+            try (InputStream inputStream = new FileInputStream(fileToUpload)) {
+                publicUrl = storageService.upload(
+                        storageKey,
+                        inputStream,
+                        finalFileSize,
+                        finalContentType);
+            }
+
+            Upload upload = new Upload(
+                    event.getId(),
+                    mediaType,
                     storageKey,
-                    inputStream,
-                    fileSize,
-                    file.getContentType());
+                    originalFileName,
+                    finalFileSize,
+                    message,
+                    publicUrl);
+
+            uploadRepository.save(upload);
+            log.info("Upload record saved for file: {}", originalFileName);
+
+        } catch (IOException e) {
+            log.error("Error processing upload for file: {}", originalFileName, e);
+        } finally {
+            if (originalFile != null && originalFile.exists()) {
+                if (!originalFile.delete()) {
+                    log.warn("Could not delete temporary original file: {}", originalFile.getAbsolutePath());
+                }
+            }
+            if (compressedFile != null && compressedFile.exists()) {
+                if (!compressedFile.delete()) {
+                    log.warn("Could not delete temporary compressed file: {}", compressedFile.getAbsolutePath());
+                }
+            }
         }
-
-        Upload upload = new Upload(
-                event.getId(),
-                mediaType,
-                storageKey,
-                originalName,
-                fileSize,
-                message,
-                publicUrl);
-
-        return uploadRepository.save(upload);
-    }
-
-    private void validateFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException("400", "Arquivo vazio");
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null) {
-            throw new BusinessException("400", "Tipo de arquivo inválido");
-        }
-
-        boolean isImage = contentType.startsWith("image/");
-        boolean isVideo = contentType.startsWith("video/");
-
-        if (!isImage && !isVideo) {
-            throw new BusinessException("400", "Tipo de arquivo não suportado. Envie apenas fotos ou vídeos.");
-        }
-
-        long mediaSize = file.getSize();
-        if (contentType.startsWith("image/") && mediaSize > 8388608) {
-            throw new MaxUploadSizeExceededException();
-        } else if (mediaSize > 52428800) {
-            throw new MaxUploadSizeExceededException();
-        }
-
     }
 
     private MediaType resolveMediaType(String contentType) {
@@ -88,8 +94,11 @@ public class UploadMediaService {
         return MediaType.PHOTO;
     }
 
-    private String generateStorageKey(String eventToken, MultipartFile file) {
-        String extension = getExtension(file.getOriginalFilename());
+    private String generateStorageKey(String eventToken, String originalFileName, MediaType mediaType) {
+        String extension = getExtension(originalFileName);
+        if (mediaType == MediaType.PHOTO) {
+            extension = "jpg";
+        }
         return "%s/%s.%s".formatted(
                 eventToken,
                 UUID.randomUUID(),
