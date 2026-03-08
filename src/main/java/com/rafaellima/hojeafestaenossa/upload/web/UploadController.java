@@ -153,6 +153,7 @@ public class UploadController {
                                                 u.getId(),
                                                 u.getUrl(),
                                                 u.getMediaType(),
+                                                u.getThumbnailUrl(),
                                                 u.getMessage(),
                                                 u.getCreatedAt(),
                                                 u.isVisible()));

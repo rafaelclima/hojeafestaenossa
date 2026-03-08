@@ -26,12 +26,14 @@ public class UploadMediaService {
     private final UploadRepository uploadRepository;
     private final StorageService storageService;
     private final ImageCompressionService imageCompressionService;
+    private final ThumbnailGenerationService thumbnailGenerationService;
 
     @Async("taskExecutor")
     public void execute(File originalFile, String originalFileName, String contentType, long fileSize, Event event,
             String message) {
         File fileToUpload = null;
         File compressedFile = null;
+        File thumbnailFile = null;
 
         try {
             MediaType mediaType = resolveMediaType(contentType);
@@ -50,6 +52,20 @@ public class UploadMediaService {
             long finalFileSize = fileToUpload.length();
             String finalContentType = (mediaType == MediaType.PHOTO) ? "image/jpeg" : contentType;
 
+            // Processamento de Thumbnail (apenas para fotos por enquanto)
+            String thumbnailUrl = null;
+            if (mediaType == MediaType.PHOTO) {
+                thumbnailFile = thumbnailGenerationService.execute(fileToUpload);
+                String thumbnailKey = storageKey.replace(".jpg", "_thumb.jpg");
+                try (InputStream thumbStream = new FileInputStream(thumbnailFile)) {
+                    thumbnailUrl = storageService.upload(
+                            thumbnailKey,
+                            thumbStream,
+                            thumbnailFile.length(),
+                            "image/jpeg");
+                }
+            }
+
             String publicUrl;
             try (InputStream inputStream = new FileInputStream(fileToUpload)) {
                 publicUrl = storageService.upload(
@@ -66,7 +82,8 @@ public class UploadMediaService {
                     originalFileName,
                     finalFileSize,
                     message,
-                    publicUrl);
+                    publicUrl,
+                    thumbnailUrl);
 
             uploadRepository.save(upload);
             log.info("Upload record saved for file: {}", originalFileName);
@@ -82,6 +99,11 @@ public class UploadMediaService {
             if (compressedFile != null && compressedFile.exists()) {
                 if (!compressedFile.delete()) {
                     log.warn("Could not delete temporary compressed file: {}", compressedFile.getAbsolutePath());
+                }
+            }
+            if (thumbnailFile != null && thumbnailFile.exists()) {
+                if (!thumbnailFile.delete()) {
+                    log.warn("Could not delete temporary thumbnail file: {}", thumbnailFile.getAbsolutePath());
                 }
             }
         }

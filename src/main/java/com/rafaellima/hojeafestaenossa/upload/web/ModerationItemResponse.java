@@ -6,11 +6,12 @@ import java.util.UUID;
 import com.rafaellima.hojeafestaenossa.upload.domain.MediaType;
 
 public record ModerationItemResponse(
-        UUID id,
-        String url,
-        MediaType mediaType,
-        String message,
-        Instant createdAt,
-        boolean visible) {
+                UUID id,
+                String url,
+                MediaType mediaType,
+                String thumbnailUrl,
+                String message,
+                Instant createdAt,
+                boolean visible) {
 
 }
