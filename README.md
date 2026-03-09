@@ -12,7 +12,7 @@
 
 **Hoje A Festa É Nossa** é uma plataforma que permite aos convidados de um evento enviar fotos e vídeos através de upload, que são exibidos em tempo real em um telão durante o evento.
 
-Imagine uma festa de 15 anos, casamento ouformatura: os convidados escaneiam um QR Code, enviam suas fotos/vídeos e imediatamente veem suas mídias aparecendo no telão da festa!
+Imagine uma festa de 15 anos, casamento ou formatura: os convidados escaneiam um QR Code, enviam suas fotos/vídeos e imediatamente veem suas mídias aparecendo no telão da festa!
 
 ---
 
