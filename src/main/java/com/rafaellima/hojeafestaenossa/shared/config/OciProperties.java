@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "oci")
 public class OciProperties {
 
+    private boolean enabled = false;
     private String region;
     private String tenancyId;
     private String userId;
@@ -14,6 +15,14 @@ public class OciProperties {
     private String bucketName;
 
     // getters e setters
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     public String getRegion() {
         return region;

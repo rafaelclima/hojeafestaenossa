@@ -41,7 +41,7 @@ public class Upload {
     private String message;
 
     @Column(name = "is_visible", nullable = false)
-    private Boolean visible = true;
+    private Boolean visible = false;
 
     @Column(name = "url", nullable = false)
     private String url;
@@ -72,6 +72,7 @@ public class Upload {
         this.message = message;
         this.url = url;
         this.thumbnailUrl = thumbnailUrl;
+        this.visible = false;
     }
 
     public UUID getId() {

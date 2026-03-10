@@ -1,13 +1,11 @@
 package com.rafaellima.hojeafestaenossa.event.web;
 
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rafaellima.hojeafestaenossa.event.application.AdminAuthService;
 import com.rafaellima.hojeafestaenossa.event.application.CreateEventService;
 import com.rafaellima.hojeafestaenossa.event.application.DeleteEventService;
-import com.rafaellima.hojeafestaenossa.event.application.FindAllEventsService;
 import com.rafaellima.hojeafestaenossa.event.application.FindEventByTokenService;
 import com.rafaellima.hojeafestaenossa.event.application.GetEventStatsService;
 import com.rafaellima.hojeafestaenossa.event.application.UpdateEventService;
@@ -16,8 +14,6 @@ import com.rafaellima.hojeafestaenossa.shared.config.AppProperties;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public class EventController {
 
     private final FindEventByTokenService findEventByTokenService;
-    private final FindAllEventsService findAllEventsService;
     private final CreateEventService createEventService;
     private final UpdateEventService updateEventService;
     private final DeleteEventService deleteEventService;
@@ -46,8 +41,6 @@ public class EventController {
 
         Event event = findEventByTokenService.execute(token);
         String baseUrl = appProperties.getBaseUrl();
-        // Usando o método factory para a resposta pública, garantindo que o adminToken
-        // não seja exposto.
         EventResponse response = EventResponse.publicFrom(event, baseUrl);
         return ResponseEntity.ok(response);
 
@@ -58,24 +51,9 @@ public class EventController {
         Event event = createEventService.execute(request);
         String baseUrl = appProperties.getBaseUrl();
 
-        // Usando o método factory para garantir que todos os campos sejam mapeados
-        // corretamente, incluindo o adminToken.
         EventResponse response = EventResponse.from(event, baseUrl);
 
         return ResponseEntity.status(201).body(response);
-    }
-
-    @GetMapping
-    public ResponseEntity<Page<EventResponse>> listEvents(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size) {
-
-        Page<Event> events = findAllEventsService.execute(PageRequest.of(page, size));
-        String baseUrl = appProperties.getBaseUrl();
-        Page<EventResponse> response = events.map(event -> EventResponse.publicFrom(event, baseUrl));
-
-        return ResponseEntity.ok(response);
-
     }
 
     @PutMapping("/{token}")

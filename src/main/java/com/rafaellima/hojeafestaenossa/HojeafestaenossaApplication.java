@@ -4,7 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
-@ConfigurationPropertiesScan
+import com.rafaellima.hojeafestaenossa.shared.config.OciProperties;
+
+@ConfigurationPropertiesScan(basePackageClasses = OciProperties.class)
 @SpringBootApplication
 public class HojeafestaenossaApplication {
 

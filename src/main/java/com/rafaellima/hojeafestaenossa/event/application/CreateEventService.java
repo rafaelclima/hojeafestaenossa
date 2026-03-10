@@ -1,7 +1,6 @@
 package com.rafaellima.hojeafestaenossa.event.application;
 
 import java.security.SecureRandom;
-import java.util.UUID;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Service;
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.event.repository.EventRepository;
 import com.rafaellima.hojeafestaenossa.event.web.CreateEventRequest;
-import com.rafaellima.hojeafestaenossa.shared.exception.FutureDateException;
+import com.rafaellima.hojeafestaenossa.shared.exception.BusinessException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,17 +19,35 @@ public class CreateEventService {
     private final EventRepository eventRepository;
 
     public Event execute(CreateEventRequest request) {
-
-        if (request.expiredAt().isBefore(request.startedAt())) {
-            throw new FutureDateException("400",
-                    "Data de expiracao está no futuro em relacao a data de inicio do evento!!");
+        if (request.name() == null || request.name().isBlank()) {
+            throw new BusinessException("400", "Nome do evento é obrigatório");
         }
 
-        String generateAccessToken = UUID.randomUUID().toString();
+        if (request.name().length() > 150) {
+            throw new BusinessException("400", "Nome do evento deve ter no máximo 150 caracteres");
+        }
+
+        if (request.startedAt() == null) {
+            throw new BusinessException("400", "Data de início é obrigatória");
+        }
+
+        if (request.expiredAt() == null) {
+            throw new BusinessException("400", "Data de expiração é obrigatória");
+        }
+
+        if (request.expiredAt().isBefore(request.startedAt())) {
+            throw new BusinessException("400",
+                    "Data de expiração deve ser posterior à data de início do evento");
+        }
+
+        String generateAccessToken = RandomStringUtils.randomAlphanumeric(12);
         String generateAdminToken = RandomStringUtils.random(6, 0, 0, true, true, null, new SecureRandom());
+
+        boolean isPublic = request.isPublic() != null ? request.isPublic() : true;
 
         Event event = new Event(request.name(), generateAccessToken, request.startedAt(), request.expiredAt(),
                 generateAdminToken);
+        event.setPublicAlbum(isPublic);
 
         return eventRepository.save(event);
 
