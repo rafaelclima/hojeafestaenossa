@@ -121,18 +121,23 @@ public class UploadController {
                                 .body(uploadedMedia);
         }
 
-        @PutMapping("/{uploadId}/visibility")
-        public ResponseEntity<Void> setVisbility(
+        @PutMapping("/events/{eventToken}/{uploadId}/visibility")
+        public ResponseEntity<Void> setVisibility(
+                        @PathVariable String eventToken,
                         @PathVariable UUID uploadId,
                         @RequestHeader("X-Admin-Token") String adminToken,
                         @RequestBody VisibilityRequest request) {
 
+                adminAuthService.validateAdminToken(eventToken, adminToken);
+
+                Event event = findEventByTokenService.execute(eventToken);
+
                 Upload upload = uploadRepository.findById(uploadId)
                                 .orElseThrow(() -> new NotFoundException("404", "Upload não encontrado"));
 
-                Event event = findEventByIdService.execute(upload.getEventId());
-
-                adminAuthService.validateAdminToken(event.getAccessToken(), adminToken);
+                if (!upload.getEventId().equals(event.getId())) {
+                        throw new BusinessException("403", "Upload não pertence a este evento");
+                }
 
                 moderationService.setVisibility(uploadId, request.visible());
                 return ResponseEntity.ok().build();
