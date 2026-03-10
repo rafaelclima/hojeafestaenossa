@@ -37,7 +37,7 @@ public class Event {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    @Column(name = "admin_token", nullable = false, length = 120, unique = true)
+    @Column(name = "admin_token", nullable = false, length = 32, unique = true)
     private String adminToken;
 
     protected Event() {
