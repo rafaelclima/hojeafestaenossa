@@ -46,19 +46,9 @@ public class EventController {
 
         Event event = findEventByTokenService.execute(token);
         String baseUrl = appProperties.getBaseUrl();
-        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
-
-        EventResponse response = EventResponse.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .startedAt(event.getStartedAt())
-                .expiredAt(event.getExpiredAt())
-                .createdAt(event.getCreatedAt())
-                .accessToken(event.getAccessToken())
-                .publicAlbum(event.isPublicAlbum())
-                .eventUrl(eventUrl)
-                .build();
-
+        // Usando o método factory para a resposta pública, garantindo que o adminToken
+        // não seja exposto.
+        EventResponse response = EventResponse.publicFrom(event, baseUrl);
         return ResponseEntity.ok(response);
 
     }
@@ -82,18 +72,7 @@ public class EventController {
 
         Page<Event> events = findAllEventsService.execute(PageRequest.of(page, size));
         String baseUrl = appProperties.getBaseUrl();
-        String eventUrl = baseUrl + "/events?eventId=";
-
-        Page<EventResponse> response = events.map(event -> EventResponse.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .startedAt(event.getStartedAt())
-                .expiredAt(event.getExpiredAt())
-                .createdAt(event.getCreatedAt())
-                .accessToken(event.getAccessToken())
-                .publicAlbum(event.isPublicAlbum())
-                .eventUrl(eventUrl + event.getAccessToken())
-                .build());
+        Page<EventResponse> response = events.map(event -> EventResponse.publicFrom(event, baseUrl));
 
         return ResponseEntity.ok(response);
 
@@ -109,19 +88,7 @@ public class EventController {
 
         Event event = updateEventService.execute(token, request);
         String baseUrl = appProperties.getBaseUrl();
-        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
-
-        EventResponse response = EventResponse.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .startedAt(event.getStartedAt())
-                .expiredAt(event.getExpiredAt())
-                .createdAt(event.getCreatedAt())
-                .accessToken(event.getAccessToken())
-                .publicAlbum(event.isPublicAlbum())
-                .eventUrl(eventUrl)
-                .build();
-
+        EventResponse response = EventResponse.publicFrom(event, baseUrl);
         return ResponseEntity.ok(response);
     }
 

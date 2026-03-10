@@ -38,4 +38,18 @@ public class EventResponse {
 
     }
 
+    public static EventResponse publicFrom(Event event, String baseUrl) {
+        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
+        return EventResponse.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .startedAt(event.getStartedAt())
+                .expiredAt(event.getExpiredAt())
+                .createdAt(event.getCreatedAt())
+                .accessToken(event.getAccessToken())
+                .publicAlbum(event.isPublicAlbum())
+                .eventUrl(eventUrl)
+                .build();
+    }
+
 }
