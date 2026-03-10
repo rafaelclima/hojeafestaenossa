@@ -142,7 +142,7 @@ The application has two levels of access:
     ```
 
 #### 4. Moderate Media (Approve/Reject)
--   **Endpoint:** `PUT /uploads/{uploadId}/visibility`
+-   **Endpoint:** `PUT /uploads/events/{eventToken}/{uploadId}/visibility`
 -   **Headers:** `X-Admin-Token: <admin-token>`
 -   **Request Body:**
     ```json
