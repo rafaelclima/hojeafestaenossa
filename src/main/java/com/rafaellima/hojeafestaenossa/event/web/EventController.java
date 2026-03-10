@@ -67,18 +67,10 @@ public class EventController {
     public ResponseEntity<EventResponse> createEvent(@RequestBody CreateEventRequest request) {
         Event event = createEventService.execute(request);
         String baseUrl = appProperties.getBaseUrl();
-        String eventUrl = baseUrl + "/events?eventId=" + event.getAccessToken();
 
-        EventResponse response = EventResponse.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .startedAt(event.getStartedAt())
-                .expiredAt(event.getExpiredAt())
-                .createdAt(event.getCreatedAt())
-                .accessToken(event.getAccessToken())
-                .publicAlbum(event.isPublicAlbum())
-                .eventUrl(eventUrl)
-                .build();
+        // Usando o método factory para garantir que todos os campos sejam mapeados
+        // corretamente, incluindo o adminToken.
+        EventResponse response = EventResponse.from(event, baseUrl);
 
         return ResponseEntity.status(201).body(response);
     }
