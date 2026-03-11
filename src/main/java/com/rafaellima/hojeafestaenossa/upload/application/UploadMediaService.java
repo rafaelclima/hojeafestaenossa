@@ -31,12 +31,15 @@ public class UploadMediaService {
     @Async("taskExecutor")
     public void execute(File originalFile, String originalFileName, String contentType, long fileSize, Event event,
             String message) {
+        log.info(">>> INICIANDO PROCESSAMENTO ASSÍNCRONO DO UPLOAD: {} ({} bytes)", originalFileName, fileSize);
+        
         File fileToUpload = null;
         File compressedFile = null;
         File thumbnailFile = null;
 
         try {
             MediaType mediaType = resolveMediaType(contentType);
+            log.info("Media type detectado: {}", mediaType);
 
             if (mediaType == MediaType.PHOTO) {
                 log.info("Starting image compression for file: {}", originalFileName);
@@ -45,28 +48,34 @@ public class UploadMediaService {
                 log.info("Image compression finished. Original size: {}, Compressed size: {}", fileSize,
                         fileToUpload.length());
             } else {
+                log.info("Vídeo detectado, enviando arquivo original");
                 fileToUpload = originalFile;
             }
 
             String storageKey = generateStorageKey(event.getAccessToken(), originalFileName, mediaType);
             long finalFileSize = fileToUpload.length();
             String finalContentType = (mediaType == MediaType.PHOTO) ? "image/jpeg" : contentType;
+            log.info("Storage key gerada: {}", storageKey);
 
             // Processamento de Thumbnail (apenas para fotos por enquanto)
             String thumbnailUrl = null;
             if (mediaType == MediaType.PHOTO) {
+                log.info("Gerando thumbnail...");
                 thumbnailFile = thumbnailGenerationService.execute(fileToUpload);
                 String thumbnailKey = storageKey.replace(".jpg", "_thumb.jpg");
+                log.info("Thumbnail key: {}", thumbnailKey);
                 try (InputStream thumbStream = new FileInputStream(thumbnailFile)) {
                     thumbnailUrl = storageService.upload(
                             thumbnailKey,
                             thumbStream,
                             thumbnailFile.length(),
                             "image/jpeg");
+                    log.info("Thumbnail upload concluído: {}", thumbnailUrl);
                 }
             }
 
             String publicUrl;
+            log.info("Iniciando upload do arquivo principal...");
             try (InputStream inputStream = new FileInputStream(fileToUpload)) {
                 publicUrl = storageService.upload(
                         storageKey,
@@ -74,6 +83,7 @@ public class UploadMediaService {
                         finalFileSize,
                         finalContentType);
             }
+            log.info("Upload principal concluído: {}", publicUrl);
 
             Upload upload = new Upload(
                     event.getId(),
@@ -86,10 +96,10 @@ public class UploadMediaService {
                     thumbnailUrl);
 
             uploadRepository.save(upload);
-            log.info("Upload record saved for file: {}", originalFileName);
+            log.info(">>> UPLOAD CONCLUÍDO COM SUCESSO! Registro salvo no banco: {}", upload.getId());
 
         } catch (IOException e) {
-            log.error("Error processing upload for file: {}", originalFileName, e);
+            log.error(">>> ERRO CRÍTICO NO PROCESSAMENTO DO UPLOAD: {}", originalFileName, e);
         } finally {
             if (originalFile != null && originalFile.exists()) {
                 if (!originalFile.delete()) {
