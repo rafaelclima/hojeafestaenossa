@@ -1,86 +1,92 @@
 package com.rafaellima.hojeafestaenossa.infra.storage.oci;
 
-import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.time.Instant;
-import java.util.Base64;
+import java.io.UncheckedIOException;
+import java.util.function.Supplier;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
+import com.oracle.bmc.Region;
+import com.oracle.bmc.auth.AuthenticationDetailsProvider;
+import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
+import com.oracle.bmc.objectstorage.ObjectStorage;
+import com.oracle.bmc.objectstorage.ObjectStorageClient;
+import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
+import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
 import com.rafaellima.hojeafestaenossa.shared.config.OciProperties;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
-@ConditionalOnProperty(name = "oci.enabled", havingValue = "true", matchIfMissing = false)
+@Slf4j
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "oci")
 @RequiredArgsConstructor
 public class OciRestStorageService implements StorageService {
 
     private final OciProperties props;
-    private PrivateKey privateKey;
-    private RestClient restClient;
+    private ObjectStorage objectStorageClient;
 
     @PostConstruct
-    public void init() throws Exception {
-        String keyPath = props.getPrivateKeyPath();
-        String privateKeyContent = Files.readString(Paths.get(keyPath));
-        
-        String base64Content = privateKeyContent
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s+", "");
-        
-        byte[] decodedKey = Base64.getDecoder().decode(base64Content);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        this.privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
+    public void init() {
+        // O SDK da OCI é projetado para ler o arquivo PEM diretamente.
+        // Você fornece um "supplier" para o InputStream, e o SDK lida com o parsing.
+        // Isso é muito mais seguro e robusto do que a manipulação manual de strings.
+        Supplier<InputStream> privateKeySupplier = () -> {
+            try {
+                return new FileInputStream(props.getPrivateKeyPath());
+            } catch (FileNotFoundException e) {
+                log.error("Arquivo de chave privada do OCI não encontrado no caminho: {}", props.getPrivateKeyPath(),
+                        e);
+                throw new UncheckedIOException(
+                        "Arquivo de chave privada do OCI não encontrado: " + props.getPrivateKeyPath(), e);
+            }
+        };
 
-        String region = props.getRegion();
-        String baseUrl = String.format("https://objectstorage.%s.oraclecloud.com", region);
-        restClient = RestClient.builder()
-                .baseUrl(baseUrl)
+        AuthenticationDetailsProvider provider = SimpleAuthenticationDetailsProvider.builder()
+                .tenantId(props.getTenancyId())
+                .userId(props.getUserId())
+                .fingerprint(props.getFingerprint())
+                .privateKeySupplier(privateKeySupplier)
+                .region(Region.fromRegionCode(props.getRegion()))
                 .build();
 
-        System.out.println("OCI REST Storage initialized for bucket: " + props.getBucketName());
+        this.objectStorageClient = ObjectStorageClient.builder().build(provider);
+
+        log.info("OCI Object Storage Service inicializado com sucesso para a região: {}", props.getRegion());
     }
 
     @Override
     public String upload(String objectName, InputStream inputStream, long contentLength, String contentType) {
+        log.info("Iniciando upload para OCI: objectName={}, contentLength={}, contentType={}", 
+                objectName, contentLength, contentType);
+        log.info("OCI Config: namespace={}, bucketName={}", props.getNamespace(), props.getBucketName());
+        
         try {
-            byte[] content = inputStream.readAllBytes();
-            String date = Instant.now().toString();
-            String region = props.getRegion();
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .namespaceName(props.getNamespace())
+                    .bucketName(props.getBucketName())
+                    .objectName(objectName)
+                    .contentType(contentType)
+                    .contentLength(contentLength)
+                    .putObjectBody(inputStream)
+                    .build();
+            
+            log.info("Enviando request para OCI...");
+            objectStorageClient.putObject(putObjectRequest);
+            log.info("Upload concluído com sucesso para: {}", objectName);
 
-            String path = String.format("/n/%s/b/%s/o/%s", props.getNamespace(), props.getBucketName(), objectName);
-
-            String signature = signRequest("PUT", path, contentLength, contentType, date, new String(content, StandardCharsets.UTF_8));
-
-            String url = String.format("https://objectstorage.%s.oraclecloud.com%s", region, path);
-
-            restClient.put()
-                    .uri(url)
-                    .header("Date", date)
-                    .header("Content-Type", contentType)
-                    .header("Content-Length", String.valueOf(contentLength))
-                    .header("Authorization", signature)
-                    .header("Host", "objectstorage." + region + ".oraclecloud.com")
-                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
-                    .body(new ByteArrayInputStream(content))
-                    .retrieve()
-                    .toBodilessEntity();
-
-            return buildObjectUrl(objectName);
+            String url = buildObjectUrl(objectName);
+            log.info("URL gerada: {}", url);
+            return url;
         } catch (Exception e) {
+            log.error("Falha ao fazer upload do objeto '{}' para o bucket OCI '{}'. Namespace: {}, Bucket: {}", 
+                    objectName, props.getBucketName(), props.getNamespace(), props.getBucketName(), e);
             throw new RuntimeException("Failed to upload to OCI: " + e.getMessage(), e);
         }
     }
@@ -88,50 +94,22 @@ public class OciRestStorageService implements StorageService {
     @Override
     public void delete(String objectName) {
         try {
-            String date = Instant.now().toString();
-            String region = props.getRegion();
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .namespaceName(props.getNamespace())
+                    .bucketName(props.getBucketName())
+                    .objectName(objectName)
+                    .build();
 
-            String path = String.format("/n/%s/b/%s/o/%s", props.getNamespace(), props.getBucketName(), objectName);
-
-            String signature = signRequest("DELETE", path, 0, "", date, "");
-
-            String url = String.format("https://objectstorage.%s.oraclecloud.com%s", region, path);
-
-            restClient.delete()
-                    .uri(url)
-                    .header("Date", date)
-                    .header("Authorization", signature)
-                    .header("Host", "objectstorage." + region + ".oraclecloud.com")
-                    .retrieve()
-                    .toBodilessEntity();
+            objectStorageClient.deleteObject(deleteObjectRequest);
+            log.info("Objeto '{}' deletado com sucesso do bucket OCI '{}'", objectName, props.getBucketName());
         } catch (Exception e) {
+            log.error("Falha ao deletar o objeto '{}' do bucket OCI '{}'", objectName, props.getBucketName(), e);
             throw new RuntimeException("Failed to delete from OCI: " + e.getMessage(), e);
         }
     }
 
-    private String signRequest(String method, String path, long contentLength, String contentType, String date, String body) throws Exception {
-        String signingString = String.format("(request-target): %s %s\ndate: %s\nhost: objectstorage.%s.oraclecloud.com",
-                method.toLowerCase(), path, date, props.getRegion());
-
-        if (contentLength > 0) {
-            signingString += String.format("\ncontent-length: %d\ncontent-type: %s", contentLength, contentType);
-        }
-
-        Signature signer = Signature.getInstance("SHA256withRSA");
-        signer.initSign(privateKey);
-        signer.update(signingString.getBytes(StandardCharsets.UTF_8));
-        byte[] signatureBytes = signer.sign();
-        String signature = Base64.getEncoder().encodeToString(signatureBytes);
-
-        return String.format("Signature version=\"1\", keyId=\"%s/%s\", algorithm=\"rsa-sha256\", headers=\"(request-target) date host%s%s\", signature=\"%s\"",
-                props.getTenancyId(),
-                props.getUserId(),
-                contentLength > 0 ? " content-length content-type" : "",
-                contentLength > 0 ? " (request-target) date host content-length content-type" : "(request-target) date host",
-                signature);
-    }
-
     private String buildObjectUrl(String objectName) {
+        // Este formato de URL assume que o bucket tem visibilidade pública.
         return String.format("https://objectstorage.%s.oraclecloud.com/n/%s/b/%s/o/%s",
                 props.getRegion(), props.getNamespace(), props.getBucketName(), objectName);
     }

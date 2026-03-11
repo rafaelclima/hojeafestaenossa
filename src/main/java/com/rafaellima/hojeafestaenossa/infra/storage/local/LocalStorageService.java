@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
@@ -19,7 +19,7 @@ import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
 import jakarta.annotation.PostConstruct;
 
 @Service
-@Primary
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "local", matchIfMissing = true)
 public class LocalStorageService implements StorageService {
 
     @Value("${storage.local.base-path:./uploads}")
