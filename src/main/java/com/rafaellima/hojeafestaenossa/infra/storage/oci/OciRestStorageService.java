@@ -103,6 +103,18 @@ public class OciRestStorageService implements StorageService {
             objectStorageClient.deleteObject(deleteObjectRequest);
             log.info("Objeto '{}' deletado com sucesso do bucket OCI '{}'", objectName, props.getBucketName());
         } catch (Exception e) {
+            // Verificar se o erro é 404 ObjectNotFound
+            if (e instanceof com.oracle.bmc.model.BmcException) {
+                com.oracle.bmc.model.BmcException bmcException = (com.oracle.bmc.model.BmcException) e;
+                if (bmcException.getStatusCode() == 404 && "ObjectNotFound".equals(bmcException.getServiceCode())) {
+                    // Objeto já não existe - isso é OK, apenas logar warning
+                    log.warn("Objeto '{}' não encontrado no bucket OCI '{}'. Pode já ter sido deletado.", 
+                            objectName, props.getBucketName());
+                    return; // Não lançar exceção, considerar delete como bem-sucedido
+                }
+            }
+            
+            // Para outros erros, lançar exceção
             log.error("Falha ao deletar o objeto '{}' do bucket OCI '{}'", objectName, props.getBucketName(), e);
             throw new RuntimeException("Failed to delete from OCI: " + e.getMessage(), e);
         }
