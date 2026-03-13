@@ -1,15 +1,83 @@
+version: '3.8'
+
 services:
-  db:
-    image: bitnami/postgresql:latest
-    container_name: hojeafestaenossa_db
+  # Aplicação Backend - Spring Boot
+  app:
+    image: hojeafestaenossa-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hojeafestaenossa-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
-      POSTGRES_DB: hojeafestaenossa
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=prod
+      
+      # Database (ajustar conforme configuração do PostgreSQL no Dockploy)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hojeafestaenossa
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-postgres}
+      
+      # OCI Object Storage
+      - OCI_TENANCY_ID=${OCI_TENANCY_ID}
+      - OCI_USER_ID=${OCI_USER_ID}
+      - OCI_FINGERPRINT=${OCI_FINGERPRINT}
+      - OCI_PRIVATE_KEY_PATH=/app/oci-key/api_key.pem
+      - OCI_NAMESPACE=${OCI_NAMESPACE}
+      - OCI_REGION=sa-saopaulo-1
+      
+      # App Config
+      - APP_STORAGE_TYPE=oci
+      - APP_BASE_URL=${APP_BASE_URL:-https://hojeafestaenossa.site}
+      
+      # JVM Options
+      - JAVA_TOOL_OPTIONS=-Xmx512m -Xms256m
+    volumes:
+      # Montar chave OCI (criar pasta oci-key e colocar o arquivo api_key.pem)
+      - ./oci-key:/app/oci-key:ro
+      # Logs (opcional)
+      - ./logs:/app/logs
+    networks:
+      - hojeafestaenossa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL (se for rodar junto, senão remover este serviço)
+  # Se usar PostgreSQL do Dockploy separadamente, comente ou remova esta seção
+  postgres:
+    image: postgres:16-alpine
+    container_name: hojeafestaenossa-postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_DB=hojeafestaenossa
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hojeafestaenossa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hojeafestaenossa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  hojeafestaenossa-network:
+    driver: bridge
 
 volumes:
-  db_data:
+  postgres_data:
+    driver: local

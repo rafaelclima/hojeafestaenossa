@@ -32,4 +32,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment & Secrets ###
 .env
+.env.local
+.env.production
+oci-key/
+logs/
+
+### Docker ###
+*.log
+
+### macOS ###
+.DS_Store

@@ -1,0 +1,89 @@
+# Configuração para Ambiente de Produção
+# Ativar com: SPRING_PROFILES_ACTIVE=prod
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hojeafestaenossa}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+    generate-ddl: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+server:
+  port: 8080
+  forward-headers-strategy: native
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,application/javascript,application/json,image/svg+xml
+    min-response-size: 1024
+
+# OCI Configuration
+oci:
+  enabled: true
+  region: ${OCI_REGION:sa-saopaulo-1}
+  tenancy-id: ${OCI_TENANCY_ID}
+  user-id: ${OCI_USER_ID}
+  fingerprint: ${OCI_FINGERPRINT}
+  private-key-path: ${OCI_PRIVATE_KEY_PATH:/app/oci-key/api_key.pem}
+  namespace: ${OCI_NAMESPACE}
+  bucket-name: hojeafestaenossa
+
+# Logging para produção (mais enxuto)
+logging:
+  level:
+    root: WARN
+    com.rafaellima.hojeafestaenossa: INFO
+    com.oracle.bmc: WARN
+    org.springframework.web: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# App Configuration
+app:
+  storage:
+    type: oci
+  base-url: ${APP_BASE_URL:https://hojeafestaenossa.site}
+
+# Actuator para health checks (apenas health e info expostos)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: true
+    ping:
+      enabled: true
