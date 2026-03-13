@@ -30,9 +30,9 @@ public class UploadMediaService {
 
     @Async("taskExecutor")
     public void execute(File originalFile, String originalFileName, String contentType, long fileSize, Event event,
-            String message) {
+            String message, File thumbnailFileFromClient) {
         log.info(">>> INICIANDO PROCESSAMENTO ASSÍNCRONO DO UPLOAD: {} ({} bytes)", originalFileName, fileSize);
-        
+
         File fileToUpload = null;
         File compressedFile = null;
         File thumbnailFile = null;
@@ -57,10 +57,25 @@ public class UploadMediaService {
             String finalContentType = (mediaType == MediaType.PHOTO) ? "image/jpeg" : contentType;
             log.info("Storage key gerada: {}", storageKey);
 
-            // Processamento de Thumbnail (apenas para fotos por enquanto)
+            // Processamento de Thumbnail
             String thumbnailUrl = null;
-            if (mediaType == MediaType.PHOTO) {
-                log.info("Gerando thumbnail...");
+            
+            // Para VÍDEO: usar thumbnail enviada pelo cliente
+            if (mediaType == MediaType.VIDEO && thumbnailFileFromClient != null && thumbnailFileFromClient.exists()) {
+                log.info("Usando thumbnail enviada pelo cliente para vídeo");
+                String thumbnailKey = storageKey.replace(".mp4", "_thumb.jpg").replace(".mov", "_thumb.jpg");
+                try (InputStream thumbStream = new FileInputStream(thumbnailFileFromClient)) {
+                    thumbnailUrl = storageService.upload(
+                            thumbnailKey,
+                            thumbStream,
+                            thumbnailFileFromClient.length(),
+                            "image/jpeg");
+                    log.info("Thumbnail de vídeo upload concluído: {}", thumbnailUrl);
+                }
+            }
+            // Para FOTO: gerar thumbnail no backend
+            else if (mediaType == MediaType.PHOTO) {
+                log.info("Gerando thumbnail para foto...");
                 thumbnailFile = thumbnailGenerationService.execute(fileToUpload);
                 String thumbnailKey = storageKey.replace(".jpg", "_thumb.jpg");
                 log.info("Thumbnail key: {}", thumbnailKey);
@@ -70,8 +85,10 @@ public class UploadMediaService {
                             thumbStream,
                             thumbnailFile.length(),
                             "image/jpeg");
-                    log.info("Thumbnail upload concluído: {}", thumbnailUrl);
+                    log.info("Thumbnail de foto upload concluído: {}", thumbnailUrl);
                 }
+            } else if (mediaType == MediaType.VIDEO) {
+                log.warn("Vídeo sem thumbnail enviada pelo cliente. Upload seguirá sem thumbnail.");
             }
 
             String publicUrl;
@@ -114,6 +131,11 @@ public class UploadMediaService {
             if (thumbnailFile != null && thumbnailFile.exists()) {
                 if (!thumbnailFile.delete()) {
                     log.warn("Could not delete temporary thumbnail file: {}", thumbnailFile.getAbsolutePath());
+                }
+            }
+            if (thumbnailFileFromClient != null && thumbnailFileFromClient.exists()) {
+                if (!thumbnailFileFromClient.delete()) {
+                    log.warn("Could not delete temporary thumbnail file from client: {}", thumbnailFileFromClient.getAbsolutePath());
                 }
             }
         }

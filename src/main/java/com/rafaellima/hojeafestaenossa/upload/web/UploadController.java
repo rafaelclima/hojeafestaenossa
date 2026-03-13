@@ -58,11 +58,17 @@ public class UploadController {
         public void upload(
                         @PathVariable String eventToken,
                         @RequestPart("file") MultipartFile file,
-                        @RequestPart(value = "message", required = false) String message) throws IOException {
+                        @RequestPart(value = "message", required = false) String message,
+                        @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) throws IOException {
 
                 Event event = findEventByTokenService.execute(eventToken);
                 validateFile(file);
                 File tempFile = saveTempFile(file);
+                
+                File thumbnailTempFile = null;
+                if (thumbnail != null && !thumbnail.isEmpty()) {
+                        thumbnailTempFile = saveTempFile(thumbnail);
+                }
 
                 uploadMediaService.execute(
                                 tempFile,
@@ -70,7 +76,8 @@ public class UploadController {
                                 file.getContentType(),
                                 file.getSize(),
                                 event,
-                                message);
+                                message,
+                                thumbnailTempFile);
         }
 
         private File saveTempFile(MultipartFile file) throws IOException {
