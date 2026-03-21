@@ -2,6 +2,17 @@ spring:
   application:
     name: hojeafestaenossa
 
+  actuator:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+    endpoint:
+      health:
+        show-details: always
+        probes:
+          enabled: true
+
   datasource:
     url: jdbc:postgresql://localhost:5432/hojeafestaenossa?stringtype=unspecified
     username: postgres
