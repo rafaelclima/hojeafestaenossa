@@ -57,6 +57,7 @@ oci:
   bucket-name: hojeafestaenossa
 
 # Logging para produção (mais enxuto)
+# Para debug de erros de startup, ative: SPRING_PROFILES_ACTIVE=prod,debug
 logging:
   level:
     root: WARN
@@ -64,6 +65,8 @@ logging:
     com.oracle.bmc: WARN
     org.springframework.web: WARN
     org.hibernate: WARN
+    org.springframework.boot: INFO
+    org.flywaydb: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

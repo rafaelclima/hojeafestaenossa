@@ -1,0 +1,25 @@
+# Profile de Debug - Ative com: SPRING_PROFILES_ACTIVE=prod,debug
+# Use APENAS para diagnosticar erros de inicialização
+
+logging:
+  level:
+    root: INFO
+    com.rafaellima.hojeafestaenossa: DEBUG
+    com.oracle.bmc: DEBUG
+    org.springframework: DEBUG
+    org.springframework.boot: DEBUG
+    org.flywaydb: DEBUG
+    org.flywaydb.core.internal.sqlscript: DEBUG
+    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
+# Mostrar detalhes completos no health check
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
