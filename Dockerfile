@@ -16,7 +16,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests -B
 
 # Extrair layers para cache eficiente do Docker
-RUN java -Djarmode=layertools -jar target/*.jar -destination extracted
+RUN java -Djarmode=layertools -jar target/*.jar extract
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
@@ -30,10 +30,10 @@ WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copiar layers extraídos (cache eficiente)
-COPY --from=builder /app/extracted/dependencies/ ./
-COPY --from=builder /app/extracted/spring-boot-loader/ ./
-COPY --from=builder /app/extracted/snapshot-dependencies/ ./
-COPY --from=builder /app/extracted/application/ ./
+COPY --from=builder /app/dependencies/ ./
+COPY --from=builder /app/spring-boot-loader/ ./
+COPY --from=builder /app/snapshot-dependencies/ ./
+COPY --from=builder /app/application/ ./
 
 # Criar diretório para uploads temporários (se necessário)
 RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
