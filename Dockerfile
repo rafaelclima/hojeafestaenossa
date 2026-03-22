@@ -15,6 +15,9 @@ RUN ./mvnw dependency:go-offline -B
 COPY src ./src
 RUN ./mvnw clean package -DskipTests -B
 
+# Extrair layers para cache eficiente do Docker
+RUN java -Djarmode=layertools -jar target/*.jar -destination extracted
+
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
@@ -26,8 +29,11 @@ WORKDIR /app
 # Criar usuário não-root para segurança
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copiar jar gerado no build
-COPY --from=builder /app/target/*.jar app.jar
+# Copiar layers extraídos (cache eficiente)
+COPY --from=builder /app/extracted/dependencies/ ./
+COPY --from=builder /app/extracted/spring-boot-loader/ ./
+COPY --from=builder /app/extracted/snapshot-dependencies/ ./
+COPY --from=builder /app/extracted/application/ ./
 
 # Criar diretório para uploads temporários (se necessário)
 RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
@@ -43,4 +49,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Executar aplicação com otimizações JVM para container
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+# UseContainerSupport é nativo no Java 21+ (não necessário)
+# G1GC é recomendado pelo Spring Boot para produção
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=75.0", "org.springframework.boot.loader.launch.JarLauncher"]
