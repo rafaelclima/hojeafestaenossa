@@ -18,6 +18,9 @@ RUN ./mvnw clean package -DskipTests -B
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
+# Instalar curl para health check (Dokploy padrão)
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Criar usuário não-root para segurança
@@ -35,9 +38,9 @@ USER appuser
 # Expor porta
 EXPOSE 8080
 
-# Health check
+# Health check com curl (padrão Dokploy)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# Executar aplicação
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Executar aplicação com otimizações JVM para container
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
