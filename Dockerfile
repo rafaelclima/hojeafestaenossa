@@ -45,10 +45,13 @@ USER appuser
 EXPOSE 8080
 
 # Health check com curl (padrão Dokploy)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+# start-period=120s para VPS de 1GB (startup pode levar 100s+)
+# timeout=10s para evitar falso negativo em VPS lenta
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Executar aplicação com otimizações JVM para container
-# UseContainerSupport é nativo no Java 21+ (não necessário)
+# MaxRAMPercentage=60% para VPS de 1GB (evita OOM Kill)
 # G1GC é recomendado pelo Spring Boot para produção
-ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=75.0", "org.springframework.boot.loader.launch.JarLauncher"]
+# UseStringDeduplication economiza ~10-15% de heap
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=60.0", "-XX:G1HeapRegionSize=4m", "-XX:+UseStringDeduplication", "org.springframework.boot.loader.launch.JarLauncher"]
