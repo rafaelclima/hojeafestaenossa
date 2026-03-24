@@ -16,7 +16,7 @@ public class ImageCompressionService {
 
         Thumbnails.of(original)
                 .size(1920, 1080) // Redimensiona para Full HD (mantendo proporção)
-                .outputQuality(0.75) // Aplica compressão
+                .outputQuality(0.90)
                 .toFile(compressed);
 
         return compressed;

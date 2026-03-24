@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.rafaellima.hojeafestaenossa.event.domain.Event;
 import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
+import com.rafaellima.hojeafestaenossa.shared.util.SlugUtils;
 import com.rafaellima.hojeafestaenossa.upload.domain.MediaType;
 import com.rafaellima.hojeafestaenossa.upload.domain.Upload;
 import com.rafaellima.hojeafestaenossa.upload.repository.UploadRepository;
@@ -52,7 +53,7 @@ public class UploadMediaService {
                 fileToUpload = originalFile;
             }
 
-            String storageKey = generateStorageKey(event.getAccessToken(), originalFileName, mediaType);
+            String storageKey = generateStorageKey(event.getName(), event.getAccessToken(), originalFileName, mediaType);
             long finalFileSize = fileToUpload.length();
             String finalContentType = (mediaType == MediaType.PHOTO) ? "image/jpeg" : contentType;
             log.info("Storage key gerada: {}", storageKey);
@@ -148,13 +149,15 @@ public class UploadMediaService {
         return MediaType.PHOTO;
     }
 
-    private String generateStorageKey(String eventToken, String originalFileName, MediaType mediaType) {
+    private String generateStorageKey(String eventName, String eventToken, String originalFileName, MediaType mediaType) {
         String extension = getExtension(originalFileName);
         if (mediaType == MediaType.PHOTO) {
             extension = "jpg";
         }
+        String slug = SlugUtils.slugify(eventName);
+        String prefix = slug.isEmpty() ? eventToken : "%s-%s".formatted(slug, eventToken);
         return "%s/%s.%s".formatted(
-                eventToken,
+                prefix,
                 UUID.randomUUID(),
                 extension);
     }
