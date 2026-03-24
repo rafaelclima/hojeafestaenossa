@@ -75,6 +75,8 @@ app:
   storage:
     type: oci
   base-url: ${APP_BASE_URL:https://hojeafestaenossa.site}
+  admin:
+    key: ${ADMIN_KEY:change-me-in-production}
 
 # Actuator para health checks (apenas health e info expostos)
 management:

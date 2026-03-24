@@ -61,3 +61,5 @@ app:
   storage:
     type: oci
   base-url: http://localhost:5174
+  admin:
+    key: ${ADMIN_KEY:change-me-in-production}
