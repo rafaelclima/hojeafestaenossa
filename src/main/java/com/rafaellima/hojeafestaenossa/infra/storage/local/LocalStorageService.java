@@ -1,6 +1,7 @@
 package com.rafaellima.hojeafestaenossa.infra.storage.local;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,6 +76,20 @@ public class LocalStorageService implements StorageService {
             case "video/quicktime" -> ".mov";
             default -> "";
         };
+    }
+
+    @Override
+    public void download(String objectName, OutputStream outputStream) {
+        try {
+            String fileName = objectName.substring("/uploads/".length());
+            Path filePath = Paths.get(basePath, fileName);
+            
+            try (InputStream inputStream = new FileInputStream(filePath.toFile())) {
+                inputStream.transferTo(outputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Could not download file: " + objectName, e);
+        }
     }
 
 }

@@ -15,4 +15,8 @@ public interface EventTokenRepository extends JpaRepository<EventToken, UUID> {
 
     @Query("SELECT t FROM EventToken t ORDER BY t.createdAt DESC")
     List<EventToken> findAllOrderByCreatedAtDesc();
+
+    long countByEventIdIsNull();
+
+    long countByEventIdIsNotNull();
 }

@@ -314,3 +314,228 @@ Standard Backend Error Format:
 ```
 
 > **Security Note:** Event tokens are single-use. Once used to create an event, they cannot be reused. The token is linked to the created event for audit purposes.
+
+---
+
+## 8. Admin Dashboard API (System Admin)
+
+These endpoints require the `X-Admin-Key` header and provide comprehensive management capabilities for the platform owner.
+
+### A. Events Management
+
+#### 1. List Events (Paginated)
+-   **Endpoint:** `GET /admin/events`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Query Params:**
+    -   `page` (default: 0) - Page number
+    -   `size` (default: 20) - Items per page
+    -   `status` (optional) - Filter by status: `active`, `expired`, `upcoming`, `all`
+    -   `from` (optional) - Filter by creation date (ISO 8601)
+    -   `to` (optional) - Filter by creation date (ISO 8601)
+-   **Response (200 OK):**
+    ```json
+    {
+      "content": [
+        {
+          "id": "uuid-string",
+          "name": "Casamento Maria e João",
+          "accessToken": "abc123xyz",
+          "startedAt": "2026-04-15T18:00:00Z",
+          "expiredAt": "2026-04-16T06:00:00Z",
+          "createdAt": "2026-03-24T10:00:00Z",
+          "status": "active",
+          "uploads": {
+            "total": 150,
+            "photos": 120,
+            "videos": 30
+          },
+          "storageUsedMB": 50.5
+        }
+      ],
+      "totalElements": 45,
+      "totalPages": 3,
+      "number": 0,
+      "size": 20
+    }
+    ```
+
+#### 2. Delete Event
+-   **Endpoint:** `DELETE /admin/events/{id}`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response:** `204 No Content`
+-   **Note:** This deletes the event and all associated uploads (cascade delete).
+
+#### 3. Export Event Media (ZIP)
+-   **Endpoint:** `GET /admin/events/{id}/export`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response:** `application/zip` (file download)
+-   **Headers:**
+    -   `Content-Disposition: attachment; filename="evento-{name}-{date}.zip"`
+-   **ZIP Structure:**
+    ```
+    evento-casamento-maria-2026-03-24.zip
+    ├── fotos/
+    │   ├── 001_20260415_193000.jpg
+    │   ├── 002_20260415_193115.jpg
+    │   └── ...
+    └── videos/
+        ├── 001_20260415_200000.mp4
+        └── ...
+    ```
+
+---
+
+### B. Platform Statistics
+
+#### 1. Global Statistics
+-   **Endpoint:** `GET /admin/events/stats`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response (200 OK):**
+    ```json
+    {
+      "events": {
+        "total": 45,
+        "active": 12,
+        "expired": 30,
+        "upcoming": 3
+      },
+      "uploads": {
+        "total": 3250,
+        "photos": 2800,
+        "videos": 450,
+        "totalSizeGB": 0.49
+      },
+      "tokens": {
+        "generated": 50,
+        "used": 45,
+        "available": 5
+      }
+    }
+    ```
+
+#### 2. Events by Month (Chart Data)
+-   **Endpoint:** `GET /admin/events/stats/events-by-month`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response (200 OK):**
+    ```json
+    {
+      "data": [
+        { "month": "2026-01", "count": 5 },
+        { "month": "2026-02", "count": 8 },
+        { "month": "2026-03", "count": 12 }
+      ]
+    }
+    ```
+
+#### 3. Uploads by Month (Chart Data)
+-   **Endpoint:** `GET /admin/events/stats/uploads-by-month`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response (200 OK):**
+    ```json
+    {
+      "data": [
+        { "month": "2026-01", "photos": 200, "videos": 20, "total": 220 },
+        { "month": "2026-02", "photos": 350, "videos": 45, "total": 395 }
+      ]
+    }
+    ```
+
+#### 4. Top Events (Chart Data)
+-   **Endpoint:** `GET /admin/events/stats/top-events`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response (200 OK):**
+    ```json
+    {
+      "data": [
+        { "eventName": "Casamento Maria", "uploads": 250, "photos": 200, "videos": 50 },
+        { "eventName": "Aniversário João", "uploads": 180, "photos": 160, "videos": 20 }
+      ]
+    }
+    ```
+
+#### 5. Storage by Month (Chart Data)
+-   **Endpoint:** `GET /admin/events/stats/storage-by-month`
+-   **Headers:** `X-Admin-Key: <system-admin-key>`
+-   **Response (200 OK):**
+    ```json
+    {
+      "data": [
+        { "month": "2026-01", "sizeMB": 120.5 },
+        { "month": "2026-02", "sizeMB": 245.8 }
+      ]
+    }
+    ```
+
+---
+
+## 9. System Admin Dashboard Screens
+
+### G. Admin Dashboard (`/admin/dashboard`)
+
+1.  **Authentication:** Require `X-Admin-Key` input on entry.
+
+2.  **Overview Cards:**
+    -   Total Events (active/expired/upcoming)
+    -   Total Uploads (photos/videos)
+    -   Storage Used (GB)
+    -   Available Tokens
+
+3.  **Charts Section:**
+    -   Events created per month (line/bar chart)
+    -   Uploads per month (stacked bar chart: photos vs videos)
+    -   Storage growth per month (area chart)
+    -   Top 10 events by uploads (horizontal bar chart)
+
+4.  **Events Table:**
+    -   Columns: Name, Status, Created At, Uploads, Storage, Actions
+    -   Filters: Status dropdown, Date range picker
+    -   Pagination: Standard pagination controls
+    -   Actions per row:
+        -   View Details (link to event)
+        -   Export Media (trigger ZIP download)
+        -   Delete (with confirmation dialog)
+
+5.  **Export Flow:**
+    -   Click "Export Media" button
+    -   Show loading indicator
+    -   Browser downloads ZIP file automatically
+    -   File naming: `evento-{slug-name}-{date}.zip`
+
+---
+
+## 10. Status Definitions
+
+| Status | Description |
+|--------|-------------|
+| `active` | Event is currently running (`startedAt <= now <= expiredAt`) |
+| `expired` | Event has ended (`now > expiredAt`) |
+| `upcoming` | Event hasn't started yet (`now < startedAt`) |
+
+---
+
+## 11. Implementation Notes for Frontend
+
+### Chart Libraries
+Recommended libraries for charts:
+-   **Chart.js** - Simple, good for basic charts
+-   **Recharts** - React-focused, composable
+-   **Apache ECharts** - Feature-rich, good for complex visualizations
+
+### File Download
+For ZIP export, handle as blob download:
+```javascript
+const response = await fetch('/admin/events/{id}/export', {
+  headers: { 'X-Admin-Key': adminKey }
+});
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = response.headers.get('content-disposition').split('filename=')[1];
+a.click();
+```
+
+### Date Formatting
+-   All dates from backend are ISO 8601 (UTC)
+-   Display in user's local timezone
+-   For filters, convert local dates to ISO 8601 before sending to API

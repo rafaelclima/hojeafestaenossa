@@ -3,6 +3,7 @@ package com.rafaellima.hojeafestaenossa.infra.storage.oci;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.util.function.Supplier;
 
@@ -15,7 +16,9 @@ import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
+import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
+import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
 import com.rafaellima.hojeafestaenossa.infra.storage.StorageService;
 import com.rafaellima.hojeafestaenossa.shared.config.OciProperties;
 
@@ -124,5 +127,27 @@ public class OciRestStorageService implements StorageService {
         // Este formato de URL assume que o bucket tem visibilidade pública.
         return String.format("https://objectstorage.%s.oraclecloud.com/n/%s/b/%s/o/%s",
                 props.getRegion(), props.getNamespace(), props.getBucketName(), objectName);
+    }
+
+    @Override
+    public void download(String objectName, OutputStream outputStream) {
+        try {
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                    .namespaceName(props.getNamespace())
+                    .bucketName(props.getBucketName())
+                    .objectName(objectName)
+                    .build();
+
+            GetObjectResponse response = objectStorageClient.getObject(getRequest);
+
+            try (InputStream inputStream = response.getInputStream()) {
+                inputStream.transferTo(outputStream);
+            }
+
+            log.info("Download concluído para o objeto: {}", objectName);
+        } catch (Exception e) {
+            log.error("Falha ao fazer download do objeto '{}' do bucket OCI '{}'", objectName, props.getBucketName(), e);
+            throw new RuntimeException("Failed to download from OCI: " + e.getMessage(), e);
+        }
     }
 }
