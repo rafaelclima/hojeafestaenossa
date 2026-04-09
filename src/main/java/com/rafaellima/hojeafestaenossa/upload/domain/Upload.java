@@ -99,6 +99,10 @@ public class Upload {
         return createdAt;
     }
 
+    public long getFileSize() {
+        return fileSize;
+    }
+
     public boolean isVisible() {
         return visible;
     }

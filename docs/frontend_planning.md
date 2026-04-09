@@ -247,6 +247,7 @@ These endpoints require the `X-Admin-Key` header and are intended for the platfo
 2.  **Stats:** `GET /events/{token}/stats`.
 3.  **Moderation Grid:** `GET /uploads/events/{token}/moderation`.
     -   Show thumbnails.
+    -   Display guest messages alongside each media item.
     -   Toggle `visible` state using `PUT .../visibility`.
     -   Real-time feeling: Re-fetch periodically or optimistic UI updates.
 
@@ -378,10 +379,55 @@ These endpoints require the `X-Admin-Key` header and provide comprehensive manag
     │   ├── 001_20260415_193000.jpg
     │   ├── 002_20260415_193115.jpg
     │   └── ...
-    └── videos/
-        ├── 001_20260415_200000.mp4
-        └── ...
+    ├── videos/
+    │   ├── 001_20260415_200000.mp4
+    │   └── ...
+    ├── manifest.json          ← Structured data (machine-readable)
+    └── galeria.html           ← Visual gallery (human-friendly)
     ```
+
+#### 4. Export ZIP Contents
+
+**manifest.json** - Structured data with all media information:
+```json
+{
+  "eventName": "Casamento Maria e João",
+  "eventToken": "abc123xyz",
+  "exportedAt": "2026-03-26T15:00:00Z",
+  "totalFiles": 150,
+  "summary": {
+    "photos": 120,
+    "videos": 30,
+    "totalSizeMB": 500.5
+  },
+  "files": [
+    {
+      "fileName": "fotos/001_20260415_193000.jpg",
+      "type": "PHOTO",
+      "message": "Parabéns pelo casamento!",
+      "createdAt": "2026-04-15T19:30:00Z",
+      "fileSizeBytes": 524288
+    },
+    {
+      "fileName": "videos/001_20260415_200000.mp4",
+      "type": "VIDEO",
+      "message": "Momento especial!",
+      "createdAt": "2026-04-15T20:00:00Z",
+      "fileSizeBytes": 52428800
+    }
+  ]
+}
+```
+
+**galeria.html** - Visual gallery for viewing in browser:
+- Responsive grid layout
+- Dark mode theme (perfect for events)
+- Lightbox for enlarged view
+- Messages displayed below each media
+- Keyboard navigation (arrows, ESC)
+- Works offline (all assets embedded)
+
+> **Note:** The `galeria.html` file provides a premium experience for the end customer. They can simply open it in any browser to view all photos, videos, and messages without needing any software.
 
 ---
 
